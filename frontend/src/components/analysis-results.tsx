@@ -17,22 +17,57 @@ interface AnalysisResultsProps {
   isAnalyzing: boolean
 }
 
+interface ModelData {
+  feature_names?: string[]
+  target_names?: string[]
+  coefficients?: number[]
+  intercepts?: number[]
+  intercept?: number
+  is_polynomial?: boolean
+  degree?: number
+  multi_output?: boolean
+  model_id?: string
+}
+
+interface ExtendedAnalysisResult {
+  function: string
+  accuracy: string
+  visualization: string
+  data_points: number
+  x_column?: string
+  y_column?: string
+  model?: ModelData
+  functions?: string[]
+  accuracies?: number[]
+  filename?: string
+  target_visualizations?: Array<{
+    target: string
+    image: string
+  }>
+}
+
+interface PredictionResponse {
+  success: boolean
+  predictions: number[]
+}
+
 export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
   const [predictionInputs, setPredictionInputs] = useState<{[key: string]: string}>({})
-  const [predictionResult, setPredictionResult] = useState<any>(null)
+  const [predictionResult, setPredictionResult] = useState<number | number[] | null>(null)
   const [isPredicting, setIsPredicting] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const { backendUrl } = useConfig()
 
   const handlePredict = async () => {
-    if (!result || !(result as any).model?.feature_names) {
+    const extendedResult = result as ExtendedAnalysisResult
+    if (!extendedResult || !extendedResult.model?.feature_names) {
       toast.error("No model available", {
         description: "Please analyze data first.",
       })
       return
     }
 
-    const featureNames = (result as any).model.feature_names as string[]
+    const featureNames = extendedResult.model.feature_names
     const baseFeatures = Array.from(new Set(
       featureNames.filter((f: string) => !f.includes('^') && !f.includes('*'))
     ))
@@ -59,20 +94,20 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
     setIsPredicting(true)
 
     try {
-      const response = await axios.post(`${backendUrl}/predict`, {
+      const response = await axios.post<PredictionResponse>(`${backendUrl}/predict`, {
         x_values: [inputValues],
-        coefficients: (result as any).model?.coefficients ?? [],
-        intercept: (result as any).model?.intercepts ?? (result as any).model?.intercept ?? 0,
-        is_polynomial: (result as any).model?.is_polynomial ?? false,
-        degree: (result as any).model?.degree ?? 1,
-        multi_output: (result as any).model?.multi_output ?? false,
+        coefficients: extendedResult.model?.coefficients ?? [],
+        intercept: extendedResult.model?.intercepts ?? extendedResult.model?.intercept ?? 0,
+        is_polynomial: extendedResult.model?.is_polynomial ?? false,
+        degree: extendedResult.model?.degree ?? 1,
+        multi_output: extendedResult.model?.multi_output ?? false,
         feature_names: featureNames,
-        model_id: (result as any).model?.model_id,
+        model_id: extendedResult.model?.model_id,
       })
 
       if (response.data.success && response.data.predictions.length > 0) {
         setPredictionResult(response.data.predictions[0])
-        const targetNames = (result as any).model?.target_names || ['Output']
+        const targetNames = extendedResult.model?.target_names || ['Output']
         
         if (Array.isArray(response.data.predictions[0])) {
           const predictions = response.data.predictions[0]
@@ -90,10 +125,11 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
           })
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Prediction error:', error)
+      const errorMessage = error instanceof Error ? error.message : "An error occurred during prediction."
       toast.error("Prediction failed", {
-        description: error.response?.data?.detail || "An error occurred during prediction.",
+        description: errorMessage,
       })
     } finally {
       setIsPredicting(false)
@@ -103,26 +139,27 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
   const handleDownloadReport = async () => {
     if (!result) return;
 
+    const extendedResult = result as ExtendedAnalysisResult
     setIsDownloading(true);
 
     try {
       const formData = new FormData();
       formData.append('data_points', result.data_points.toString());
-      formData.append('filename', (result as any).filename || 'uploaded_file');
+      formData.append('filename', extendedResult.filename || 'uploaded_file');
       
-      const model = (result as any).model;
+      const model = extendedResult.model;
       if (model) {
           formData.append('x_columns', JSON.stringify(model.feature_names || []));
           formData.append('y_columns', JSON.stringify(model.target_names || []));
           formData.append('coefficients', JSON.stringify(model.coefficients || []));
       }
       
-      if ((result as any).functions && (result as any).accuracies) {
-          formData.append('functions', JSON.stringify((result as any).functions));
-          formData.append('accuracies', JSON.stringify((result as any).accuracies));
+      if (extendedResult.functions && extendedResult.accuracies) {
+          formData.append('functions', JSON.stringify(extendedResult.functions));
+          formData.append('accuracies', JSON.stringify(extendedResult.accuracies));
       } else {
-          formData.append('functions', JSON.stringify([(result as any).function || '']));
-          formData.append('accuracies', JSON.stringify([(result as any).accuracy || '']));
+          formData.append('functions', JSON.stringify([extendedResult.function || '']));
+          formData.append('accuracies', JSON.stringify([extendedResult.accuracy || '']));
       }
 
       const response = await axios.post(`${backendUrl}/generate-pdf`, formData);
@@ -145,10 +182,11 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
       } else {
         throw new Error('Failed to start report generation');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Download error:', error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to generate PDF report."
       toast.error("Download failed", {
-        description: error.response?.data?.detail || "Failed to generate PDF report.",
+        description: errorMessage,
       });
     } finally {
       setIsDownloading(false);
@@ -186,6 +224,8 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
     )
   }
 
+  const extendedResult = result as ExtendedAnalysisResult
+
   return (
     <div className="space-y-6">
       <Card>
@@ -197,22 +237,22 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {Array.isArray((result as any).functions) ? (
+            {Array.isArray(extendedResult.functions) ? (
               <div className="space-y-2">
-                {(result as any).functions.map((fn: string, idx: number) => (
+                {extendedResult.functions.map((fn: string, idx: number) => (
                   <div key={idx} className="p-3 bg-muted rounded">
                     <p className="font-mono text-sm">{fn}</p>
-                    {(result as any).accuracies && (
-                      <p className="text-xs text-muted-foreground mt-1">Accuracy: {(result as any).accuracies[idx]}%</p>
+                    {extendedResult.accuracies && (
+                      <p className="text-xs text-muted-foreground mt-1">Accuracy: {extendedResult.accuracies[idx]}%</p>
                     )}
                   </div>
                 ))}
               </div>
             ) : (
               <div className="p-4 bg-muted rounded-lg">
-                <p className="font-mono text-lg text-center">{(result as any).function}</p>
-                {(result as any).accuracy && (
-                  <p className="text-xs text-muted-foreground text-center mt-2">Accuracy: {(result as any).accuracy}</p>
+                <p className="font-mono text-lg text-center">{extendedResult.function}</p>
+                {extendedResult.accuracy && (
+                  <p className="text-xs text-muted-foreground text-center mt-2">Accuracy: {extendedResult.accuracy}</p>
                 )}
               </div>
             )}
@@ -224,21 +264,21 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
         </CardContent>
       </Card>
 
-      {(result as any).target_visualizations ? (
+      {extendedResult.target_visualizations ? (
         <Card>
           <CardHeader>
             <CardTitle>Data Visualization</CardTitle>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue={(result as any).target_visualizations?.[0]?.target || '0'} className="w-full">
+            <Tabs defaultValue={extendedResult.target_visualizations?.[0]?.target || '0'} className="w-full">
               <TabsList className="flex flex-wrap">
-                {(result as any).target_visualizations.map((tv: any) => (
+                {extendedResult.target_visualizations.map((tv) => (
                   <TabsTrigger key={tv.target} value={tv.target} className="mr-1 mb-1">
                     {tv.target}
                   </TabsTrigger>
                 ))}
               </TabsList>
-              {(result as any).target_visualizations.map((tv: any) => (
+              {extendedResult.target_visualizations.map((tv) => (
                 <TabsContent key={tv.target} value={tv.target}>
                   <div className="flex justify-center">
                     <img
@@ -281,11 +321,11 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
             </TabsList>
             
             <TabsContent value="predict" className="space-y-4 pt-4">
-              {(result as any).model?.feature_names ? (
+              {extendedResult.model?.feature_names ? (
                 <div className="space-y-4">
                   <Label>Enter values for prediction</Label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {(Array.from(new Set((result as any).model.feature_names.filter((f: string) => !f.includes('^') && !f.includes('*')))) as string[]).map((feature: string) => (
+                    {(Array.from(new Set(extendedResult.model.feature_names.filter((f: string) => !f.includes('^') && !f.includes('*')))) as string[]).map((feature: string) => (
                       <div key={feature} className="space-y-1">
                         <Label htmlFor={`input-${feature}`} className="text-xs">
                           {feature}
@@ -327,7 +367,7 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
                   {Array.isArray(predictionResult) ? (
                     <div className="space-y-1">
                       {predictionResult.map((pred: number, idx: number) => {
-                        const targetName = (result as any).model?.target_names?.[idx] || `Target ${idx + 1}`
+                        const targetName = extendedResult.model?.target_names?.[idx] || `Target ${idx + 1}`
                         return (
                           <p key={idx} className="font-mono text-sm">
                             <span className="text-muted-foreground">{targetName}:</span> {pred.toFixed(4)}

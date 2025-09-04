@@ -38,7 +38,7 @@ export function ConfigManager() {
       
       setIsEditing(false)
       reload() // This will reload the config from the file
-    } catch (error) {
+    } catch {
       toast.error("Save failed", {
         description: "Failed to save configuration. Please try again.",
       })

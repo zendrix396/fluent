@@ -22,12 +22,16 @@ interface ManualInputProps {
   setIsAnalyzing: (analyzing: boolean) => void
 }
 
+interface ParsedDataPoint {
+  x: number | number[]
+  y: number
+}
+
 export function ManualInput({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: ManualInputProps) {
   const [dataPoints, setDataPoints] = useState<DataPoint[]>([
     { x: '', y: '' },
     { x: '', y: '' },
   ])
-  const [isMultiDimensional, setIsMultiDimensional] = useState(false)
   const { backendUrl } = useConfig()
 
   const addDataPoint = () => {
@@ -46,7 +50,7 @@ export function ManualInput({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }:
     setDataPoints(updated)
   }
 
-  const parseXValue = (xStr: string) => {
+  const parseXValue = (xStr: string): number | number[] => {
     if (xStr.includes(',')) {
       const values = xStr.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v))
       return values.length > 1 ? values : parseFloat(xStr)
@@ -54,7 +58,7 @@ export function ManualInput({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }:
     return parseFloat(xStr)
   }
 
-  const validateAndParseData = () => {
+  const validateAndParseData = (): ParsedDataPoint[] | null => {
     const validPoints = dataPoints.filter(point => point.x.trim() && point.y.trim())
     
     if (validPoints.length < 2) {
@@ -64,8 +68,7 @@ export function ManualInput({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }:
       return null
     }
 
-    const parsedPoints = []
-    let hasMultiDimensional = false
+    const parsedPoints: ParsedDataPoint[] = []
 
     for (const point of validPoints) {
       const xValue = parseXValue(point.x)
@@ -78,17 +81,12 @@ export function ManualInput({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }:
         return null
       }
 
-      if (Array.isArray(xValue)) {
-        hasMultiDimensional = true
-      }
-
       parsedPoints.push({
         x: xValue,
         y: yValue
       })
     }
 
-    setIsMultiDimensional(hasMultiDimensional)
     return parsedPoints
   }
 
@@ -109,10 +107,11 @@ export function ManualInput({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }:
           description: `Generated the required function(s).`,
         })
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Analysis error:', error)
+      const errorMessage = error instanceof Error ? error.message : "Failed to analyze data. Please try again."
       toast.error("Analysis failed", {
-        description: error.response?.data?.detail || "Failed to analyze data. Please try again.",
+        description: errorMessage,
       })
     } finally {
       setIsAnalyzing(false)
@@ -125,7 +124,7 @@ export function ManualInput({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }:
         <CardHeader>
           <CardTitle className="text-lg">Data Points</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Enter your data points manually. For multi-dimensional input, separate X values with commas (e.g., "1,2,3").
+            Enter your data points manually. For multi-dimensional input, separate X values with commas (e.g., &quot;1,2,3&quot;).
           </p>
         </CardHeader>
         <CardContent className="space-y-3">

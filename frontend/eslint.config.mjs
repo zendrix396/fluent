@@ -10,13 +10,16 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
-  // Disable everything by extending nothing and turning off all rules
-  ...compat.config({
-    rules: {
-      // eslint-disable-all: turn off all known rules
-    },
-    ignores: ["**/*"], // ignore everything
-  }),
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    ignores: [
+      "node_modules/**",
+      ".next/**",
+      "out/**",
+      "build/**",
+      "next-env.d.ts",
+    ],
+  },
 ];
 
 export default eslintConfig;

@@ -23,7 +23,7 @@ interface FileInfo {
   shape: [number, number]
   columns: string[]
   numeric_columns: string[]
-  head: any[]
+  head: unknown[]
 }
 
 export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: FileUploadProps) {
@@ -32,7 +32,7 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
   const [selectedXColumns, setSelectedXColumns] = useState<string[]>([])
   const [selectedYColumns, setSelectedYColumns] = useState<string[]>([])
   const [polyDegree, setPolyDegree] = useState<number>(1)
-  const { backendUrl, loading: configLoading } = useConfig()
+  const { backendUrl } = useConfig()
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0]
@@ -67,16 +67,17 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
           description: `Loaded ${response.data.data.shape[0]} rows with ${response.data.data.shape[1]} columns.`,
         })
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Upload error:', error)
+      const errorMessage = error instanceof Error ? error.message : "Failed to upload file. Please try again."
       toast.error("Upload failed", {
-        description: error.response?.data?.detail || "Failed to upload file. Please try again.",
+        description: errorMessage,
       })
       setUploadedFile(null)
     } finally {
       setIsAnalyzing(false)
     }
-  }, [toast, setIsAnalyzing, backendUrl])
+  }, [setIsAnalyzing, backendUrl])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -118,10 +119,11 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
           description: `Generated the required function(s).`,
         })
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Analysis error:', error)
+      const errorMessage = error instanceof Error ? error.message : "Failed to analyze data. Please try again."
       toast.error("Analysis failed", {
-        description: error.response?.data?.detail || "Failed to analyze data. Please try again.",
+        description: errorMessage,
       })
     } finally {
       setIsAnalyzing(false)
