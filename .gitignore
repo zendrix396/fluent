@@ -14,11 +14,11 @@ frontend2/
 *.swp
 *.swo
 *~
-config.json
+# config.json
 # OS
 .DS_Store
 Thumbs.db
-
+.frontend1/
 # Environment variables
 .env
 .env.local
