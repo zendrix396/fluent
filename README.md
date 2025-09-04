@@ -2,7 +2,7 @@
 
 Transform your data into mathematical functions with high accuracy using advanced polynomial regression and machine learning techniques.
 
-## 🚀 Features
+## Features
 
 - **Multi-format Support**: Upload CSV, XLSX, or JSON files
 - **Manual Data Input**: Enter data points directly in the interface
@@ -11,7 +11,7 @@ Transform your data into mathematical functions with high accuracy using advance
 - **LaTeX Export**: Download comprehensive reports in LaTeX format
 - **Prediction Engine**: Use generated functions to predict new values
 
-## 🛠 Tech Stack
+## Tech Stack
 
 ### Backend
 - **FastAPI**: High-performance Python web framework
@@ -28,13 +28,13 @@ Transform your data into mathematical functions with high accuracy using advance
 - **Radix UI**: Accessible component primitives
 - **Recharts**: Data visualization library
 
-## 📋 Prerequisites
+## Prerequisites
 
 - Python 3.8 or higher
 - Node.js 18 or higher
 - npm or yarn package manager
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Clone the Repository
 
@@ -66,7 +66,7 @@ npm run dev
 
 The frontend will be available at `http://localhost:3000`
 
-## 📊 Usage
+## Usage
 
 ### File Upload
 1. Navigate to the **File Upload** tab
@@ -86,7 +86,7 @@ The frontend will be available at `http://localhost:3000`
 - Use the prediction tool to forecast new values
 - Download LaTeX reports for documentation
 
-## 🔧 API Endpoints
+## API Endpoints
 
 ### Core Endpoints
 - `POST /upload-file` - Upload and validate data files
@@ -95,7 +95,7 @@ The frontend will be available at `http://localhost:3000`
 - `POST /predict` - Make predictions using generated models
 - `POST /generate-latex` - Generate LaTeX documentation
 
-## 🧮 Mathematical Functions
+## Mathematical Functions
 
 Fluent automatically determines the best mathematical model for your data:
 
