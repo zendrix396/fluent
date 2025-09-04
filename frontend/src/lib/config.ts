@@ -8,18 +8,18 @@ export interface Config {
 // Load configuration from config.json
 export const loadConfig = async (): Promise<Config> => {
   try {
-    const response = await fetch('/config.json');
+    const response = await fetch("/config.json");
     if (!response.ok) {
       throw new Error(`Failed to load config: ${response.statusText}`);
     }
     return await response.json();
   } catch (error) {
-    console.error('Error loading config:', error);
+    console.error("Error loading config:", error);
     // Fallback to default configuration
     return {
       backend: {
-        baseUrl: 'http://localhost:8000'
-      }
+        baseUrl: "http://localhost:8000",
+      },
     };
   }
 };

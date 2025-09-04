@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Upload, FileText, AlertCircle, Loader2 } from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
+import { toast } from 'sonner'
 import { useConfig } from '@/hooks/use-config'
 import type { AnalysisResult } from '@/app/page'
 
@@ -32,22 +32,18 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
   const [selectedXColumns, setSelectedXColumns] = useState<string[]>([])
   const [selectedYColumns, setSelectedYColumns] = useState<string[]>([])
   const [polyDegree, setPolyDegree] = useState<number>(1)
-  const { toast } = useToast()
   const { backendUrl, loading: configLoading } = useConfig()
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0]
     if (!file) return
 
-    // Validate file type
     const validTypes = ['.csv', '.xlsx', '.xls', '.json']
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
     
     if (!validTypes.includes(fileExtension)) {
-      toast({
-        title: "Invalid file type",
+      toast.error("Invalid file type", {
         description: "Please upload a CSV, XLSX, or JSON file.",
-        variant: "destructive",
       })
       return
     }
@@ -67,17 +63,14 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
 
       if (response.data.success) {
         setFileInfo(response.data.data)
-        toast({
-          title: "File uploaded successfully",
+        toast.success("File uploaded successfully", {
           description: `Loaded ${response.data.data.shape[0]} rows with ${response.data.data.shape[1]} columns.`,
         })
       }
     } catch (error: any) {
       console.error('Upload error:', error)
-      toast({
-        title: "Upload failed",
+      toast.error("Upload failed", {
         description: error.response?.data?.detail || "Failed to upload file. Please try again.",
-        variant: "destructive",
       })
       setUploadedFile(null)
     } finally {
@@ -98,10 +91,8 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
 
   const handleAnalyze = async () => {
     if (!uploadedFile || selectedXColumns.length === 0 || selectedYColumns.length === 0) {
-      toast({
-        title: "Missing information",
+      toast.error("Missing information", {
         description: "Please select at least one X column and one Y column.",
-        variant: "destructive",
       })
       return
     }
@@ -123,17 +114,14 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
 
       if (response.data.success) {
         onAnalysisComplete(response.data)
-        toast({
-          title: "Analysis complete",
+        toast.success("Analysis complete", {
           description: `Generated the required function(s).`,
         })
       }
     } catch (error: any) {
       console.error('Analysis error:', error)
-      toast({
-        title: "Analysis failed",
+      toast.error("Analysis failed", {
         description: error.response?.data?.detail || "Failed to analyze data. Please try again.",
-        variant: "destructive",
       })
     } finally {
       setIsAnalyzing(false)
@@ -142,7 +130,6 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
 
   return (
     <div className="space-y-4">
-      {/* File Drop Zone */}
       <Card>
         <CardContent className="p-6">
           <div
@@ -171,7 +158,6 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
         </CardContent>
       </Card>
 
-      {/* File Info */}
       {uploadedFile && fileInfo && (
         <Card>
           <CardContent className="p-4">
@@ -191,56 +177,30 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
         </Card>
       )}
 
-      {/* Column Selection with checkboxes */}
       {fileInfo && fileInfo.numeric_columns.length >= 2 && (
         <div className="space-y-4">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col items-center gap-4">
             <div className="flex items-center gap-2">
-              <Label>Regression:</Label>
+              <Label>Type of Regression:</Label>
               <Button variant={polyDegree === 1 ? 'secondary' : 'ghost'} size="sm" onClick={() => setPolyDegree(1)}>Linear</Button>
               <Button variant={polyDegree > 1 ? 'secondary' : 'ghost'} size="sm" onClick={() => setPolyDegree(2)}>Polynomial (deg 2)</Button>
             </div>
           </div>
-
+        {/* underline here */}
+        <div className="w-full h-1 bg-muted-foreground/25 rounded-full"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3 md:pr-4">
-              <div className="flex items-center justify-between">
+            <div className="space-y-3">
+              <div className="flex flex-col items-center gap-3">
                 <Label>X Columns (Inputs)</Label>
                 <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 px-2 text-xs"
-                    onClick={() => setSelectedXColumns(fileInfo.numeric_columns)}
-                  >
-                    Select All
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 px-2 text-xs"
-                    onClick={() => {
-                      const remaining = fileInfo.numeric_columns.filter(
-                        col => !selectedYColumns.includes(col)
-                      )
-                      setSelectedXColumns(remaining)
-                    }}
-                  >
-                    Select Remaining
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 px-2 text-xs"
-                    onClick={() => setSelectedXColumns([])}
-                  >
-                    Clear
-                  </Button>
+                  <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setSelectedXColumns(fileInfo.numeric_columns)}>Select All</Button>
+                  <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setSelectedXColumns(fileInfo.numeric_columns.filter(col => !selectedYColumns.includes(col)))}>Select Remaining</Button>
+                  <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setSelectedXColumns([])}>Clear</Button>
                 </div>
               </div>
               <div className="max-h-80 overflow-auto rounded-md border p-3 space-y-2">
                 {fileInfo.numeric_columns.map((column) => (
-                  <label key={column} className="flex items-center gap-2 text-sm">
+                  <label key={column} className="flex items-center gap-2 text-sm cursor-pointer">
                     <Checkbox
                       checked={selectedXColumns.includes(column)}
                       onCheckedChange={(checked) => {
@@ -248,6 +208,7 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
                           checked ? [...prev, column] : prev.filter((c) => c !== column)
                         )
                       }}
+                      id={`x-${column}`}
                     />
                     <span className="truncate">{column}</span>
                   </label>
@@ -255,44 +216,18 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
               </div>
             </div>
 
-            <div className="space-y-3 md:pl-4">
-              <div className="flex items-center justify-between">
+            <div className="space-y-3">
+              <div className="flex flex-col items-center gap-3">
                 <Label>Y Columns (Targets)</Label>
                 <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 px-2 text-xs"
-                    onClick={() => setSelectedYColumns(fileInfo.numeric_columns)}
-                  >
-                    Select All
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 px-2 text-xs"
-                    onClick={() => {
-                      const remaining = fileInfo.numeric_columns.filter(
-                        col => !selectedXColumns.includes(col)
-                      )
-                      setSelectedYColumns(remaining)
-                    }}
-                  >
-                    Select Remaining
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 px-2 text-xs"
-                    onClick={() => setSelectedYColumns([])}
-                  >
-                    Clear
-                  </Button>
+                  <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setSelectedYColumns(fileInfo.numeric_columns)}>Select All</Button>
+                  <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setSelectedYColumns(fileInfo.numeric_columns.filter(col => !selectedXColumns.includes(col)))}>Select Remaining</Button>
+                  <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setSelectedYColumns([])}>Clear</Button>
                 </div>
               </div>
               <div className="max-h-80 overflow-auto rounded-md border p-3 space-y-2">
                 {fileInfo.numeric_columns.map((column) => (
-                  <label key={column} className="flex items-center gap-2 text-sm">
+                  <label key={column} className="flex items-center gap-2 text-sm cursor-pointer">
                     <Checkbox
                       checked={selectedYColumns.includes(column)}
                       onCheckedChange={(checked) => {
@@ -300,6 +235,7 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
                           checked ? [...prev, column] : prev.filter((c) => c !== column)
                         )
                       }}
+                       id={`y-${column}`}
                     />
                     <span className="truncate">{column}</span>
                   </label>
@@ -310,7 +246,6 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
         </div>
       )}
 
-      {/* Warning for insufficient numeric columns */}
       {fileInfo && fileInfo.numeric_columns.length < 2 && (
         <Card>
           <CardContent className="p-4">
@@ -325,7 +260,6 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
         </Card>
       )}
 
-      {/* Analyze Button */}
       {fileInfo && selectedXColumns.length > 0 && selectedYColumns.length > 0 && (
         <Button 
           onClick={handleAnalyze} 

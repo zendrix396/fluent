@@ -1,26 +1,35 @@
-"use client"
+"use client";
 
-import { useState } from 'react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { FileUpload } from '@/components/file-upload'
-import { ManualInput } from '@/components/manual-input'
-import { AnalysisResults } from '@/components/analysis-results'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { Calculator, Upload, PenTool } from 'lucide-react'
+import { useState } from "react";
+import Link from "next/link";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { FileUpload } from "@/components/file-upload";
+import { ManualInput } from "@/components/manual-input";
+import { AnalysisResults } from "@/components/analysis-results";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Calculator, Upload, PenTool } from "lucide-react";
 
 export interface AnalysisResult {
-  function: string
-  accuracy: string
-  visualization: string
-  data_points: number
-  x_column?: string
-  y_column?: string
+  function: string;
+  accuracy: string;
+  visualization: string;
+  data_points: number;
+  x_column?: string;
+  y_column?: string;
 }
 
 export default function Home() {
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(
+    null
+  );
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
@@ -28,7 +37,7 @@ export default function Home() {
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+            <Link href="/" className="flex items-center space-x-3">
               <Calculator className="h-8 w-8 text-primary" />
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Fluent</h1>
@@ -36,7 +45,7 @@ export default function Home() {
                   Transform your data into mathematical functions
                 </p>
               </div>
-            </div>
+            </Link>
             <ThemeToggle />
           </div>
         </div>
@@ -44,14 +53,15 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Input Section */}
-          <div className="space-y-6">
+          <div className="space-y-6 lg:col-span-3">
             <Card>
               <CardHeader>
                 <CardTitle>Data Input</CardTitle>
                 <CardDescription>
-                  Upload your data file or input data points manually to generate mathematical functions
+                  Upload your data file or input data points manually to
+                  generate mathematical functions
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -66,17 +76,17 @@ export default function Home() {
                       Manual Input
                     </TabsTrigger>
                   </TabsList>
-                  
+
                   <TabsContent value="upload" className="mt-4">
-                    <FileUpload 
+                    <FileUpload
                       onAnalysisComplete={setAnalysisResult}
                       isAnalyzing={isAnalyzing}
                       setIsAnalyzing={setIsAnalyzing}
                     />
                   </TabsContent>
-                  
+
                   <TabsContent value="manual" className="mt-4">
-                    <ManualInput 
+                    <ManualInput
                       onAnalysisComplete={setAnalysisResult}
                       isAnalyzing={isAnalyzing}
                       setIsAnalyzing={setIsAnalyzing}
@@ -105,11 +115,8 @@ export default function Home() {
           </div>
 
           {/* Results Section */}
-          <div>
-            <AnalysisResults 
-              result={analysisResult}
-              isAnalyzing={isAnalyzing}
-            />
+          <div className="lg:col-span-2">
+            <AnalysisResults result={analysisResult} isAnalyzing={isAnalyzing} />
           </div>
         </div>
       </main>
@@ -118,10 +125,13 @@ export default function Home() {
       <footer className="border-t bg-card mt-16">
         <div className="container mx-auto px-4 py-6">
           <div className="text-center text-sm text-muted-foreground">
-            <p>Fluent - Powered by scikit-learn and advanced polynomial regression</p>
+            <p>
+              Fluent - Powered by scikit-learn and advanced polynomial
+              regression
+            </p>
           </div>
         </div>
       </footer>
     </div>
-  )
+  );
 }

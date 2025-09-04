@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Download, FileText, Calculator, Loader2, TrendingUp } from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
+import { Download, Calculator, Loader2, TrendingUp } from 'lucide-react'
+import { toast } from 'sonner'
 import { useConfig } from '@/hooks/use-config'
 import type { AnalysisResult } from '@/app/page'
 
@@ -22,43 +22,34 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
   const [predictionResult, setPredictionResult] = useState<any>(null)
   const [isPredicting, setIsPredicting] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
-  const { toast } = useToast()
   const { backendUrl } = useConfig()
 
   const handlePredict = async () => {
     if (!result || !(result as any).model?.feature_names) {
-      toast({
-        title: "No model available",
+      toast.error("No model available", {
         description: "Please analyze data first.",
-        variant: "destructive",
       })
       return
     }
 
     const featureNames = (result as any).model.feature_names as string[]
-    // Determine base features (no powers/interactions)
     const baseFeatures = Array.from(new Set(
       featureNames.filter((f: string) => !f.includes('^') && !f.includes('*'))
     ))
     const inputValues: number[] = []
     
-    // Validate all required inputs are provided for base features only
     for (const feature of baseFeatures) {
       const value = predictionInputs[feature]
       if (!value || value.trim() === '') {
-        toast({
-          title: "Missing input",
+        toast.error("Missing input", {
           description: `Please enter a value for ${feature}.`,
-          variant: "destructive",
         })
         return
       }
       const numValue = parseFloat(value.trim())
       if (isNaN(numValue)) {
-        toast({
-          title: "Invalid input",
+        toast.error("Invalid input", {
           description: `Please enter a valid number for ${feature}.`,
-          variant: "destructive",
         })
         return
       }
@@ -84,31 +75,25 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
         const targetNames = (result as any).model?.target_names || ['Output']
         
         if (Array.isArray(response.data.predictions[0])) {
-          // Multi-output
           const predictions = response.data.predictions[0]
           let description = 'Predictions: '
           predictions.forEach((pred: number, idx: number) => {
             description += `${targetNames[idx] || `Target ${idx + 1}`}: ${pred.toFixed(4)}`
             if (idx < predictions.length - 1) description += ', '
           })
-          toast({
-            title: "Prediction complete",
+          toast.success("Prediction complete", {
             description,
           })
         } else {
-          // Single output
-          toast({
-            title: "Prediction complete",
+          toast.success("Prediction complete", {
             description: `${targetNames[0] || 'Predicted'}: ${response.data.predictions[0].toFixed(4)}`,
           })
         }
       }
     } catch (error: any) {
       console.error('Prediction error:', error)
-      toast({
-        title: "Prediction failed",
+      toast.error("Prediction failed", {
         description: error.response?.data?.detail || "An error occurred during prediction.",
-        variant: "destructive",
       })
     } finally {
       setIsPredicting(false)
@@ -144,12 +129,10 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
 
       if (response.data?.job_id) {
         const { job_id, filename } = response.data;
-        toast({
-          title: "Report Generation Started",
+        toast.info("Report Generation Started", {
           description: "Your PDF report will be downloaded shortly.",
         });
         
-        // Use a slight delay to allow the server to process the PDF
         setTimeout(() => {
             const link = document.createElement('a');
             link.href = `${backendUrl}/download-report/${job_id}`;
@@ -164,10 +147,8 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
       }
     } catch (error: any) {
       console.error('Download error:', error);
-      toast({
-        title: "Download failed",
+      toast.error("Download failed", {
         description: error.response?.data?.detail || "Failed to generate PDF report.",
-        variant: "destructive",
       });
     } finally {
       setIsDownloading(false);
@@ -207,7 +188,6 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
 
   return (
     <div className="space-y-6">
-      {/* Function Result */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -244,7 +224,6 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
         </CardContent>
       </Card>
 
-      {/* Visualization */}
       {(result as any).target_visualizations ? (
         <Card>
           <CardHeader>
@@ -290,7 +269,6 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
         </Card>
       )}
 
-      {/* Tools */}
       <Card>
         <CardHeader>
           <CardTitle>Tools</CardTitle>
@@ -302,12 +280,12 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
               <TabsTrigger value="export">Export</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="predict" className="space-y-4">
+            <TabsContent value="predict" className="space-y-4 pt-4">
               {(result as any).model?.feature_names ? (
                 <div className="space-y-4">
                   <Label>Enter values for prediction</Label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {Array.from(new Set((result as any).model.feature_names.filter((f: string) => !f.includes('^') && !f.includes('*')))).map((feature: string) => (
+                    {(Array.from(new Set((result as any).model.feature_names.filter((f: string) => !f.includes('^') && !f.includes('*')))) as string[]).map((feature: string) => (
                       <div key={feature} className="space-y-1">
                         <Label htmlFor={`input-${feature}`} className="text-xs">
                           {feature}
@@ -366,7 +344,7 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
               )}
             </TabsContent>
             
-            <TabsContent value="export" className="space-y-4">
+            <TabsContent value="export" className="space-y-4 pt-4">
               <Button 
                 onClick={handleDownloadReport}
                 disabled={isDownloading}

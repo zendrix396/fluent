@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Plus, Trash2, Loader2 } from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
+import { toast } from 'sonner'
 import { useConfig } from '@/hooks/use-config'
 import type { AnalysisResult } from '@/app/page'
 
@@ -28,7 +28,6 @@ export function ManualInput({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }:
     { x: '', y: '' },
   ])
   const [isMultiDimensional, setIsMultiDimensional] = useState(false)
-  const { toast } = useToast()
   const { backendUrl } = useConfig()
 
   const addDataPoint = () => {
@@ -48,7 +47,6 @@ export function ManualInput({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }:
   }
 
   const parseXValue = (xStr: string) => {
-    // Check if it's a multi-dimensional input (comma-separated values)
     if (xStr.includes(',')) {
       const values = xStr.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v))
       return values.length > 1 ? values : parseFloat(xStr)
@@ -60,10 +58,8 @@ export function ManualInput({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }:
     const validPoints = dataPoints.filter(point => point.x.trim() && point.y.trim())
     
     if (validPoints.length < 2) {
-      toast({
-        title: "Insufficient data",
+      toast.error("Insufficient data", {
         description: "Please provide at least 2 valid data points.",
-        variant: "destructive",
       })
       return null
     }
@@ -76,10 +72,8 @@ export function ManualInput({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }:
       const yValue = parseFloat(point.y)
 
       if (isNaN(yValue) || (typeof xValue === 'number' && isNaN(xValue))) {
-        toast({
-          title: "Invalid data",
+        toast.error("Invalid data", {
           description: "Please ensure all values are valid numbers.",
-          variant: "destructive",
         })
         return null
       }
@@ -111,17 +105,14 @@ export function ManualInput({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }:
 
       if (response.data.success) {
         onAnalysisComplete(response.data)
-        toast({
-          title: "Analysis complete",
+        toast.success("Analysis complete", {
           description: `Generated the required function(s).`,
         })
       }
     } catch (error: any) {
       console.error('Analysis error:', error)
-      toast({
-        title: "Analysis failed",
+      toast.error("Analysis failed", {
         description: error.response?.data?.detail || "Failed to analyze data. Please try again.",
-        variant: "destructive",
       })
     } finally {
       setIsAnalyzing(false)
@@ -197,7 +188,6 @@ export function ManualInput({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }:
         </Button>
       </div>
 
-      {/* Example */}
       <Card>
         <CardContent className="p-4">
           <div className="text-sm text-muted-foreground">

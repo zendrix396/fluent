@@ -6,14 +6,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Settings, Save, Loader2 } from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
+import { toast } from 'sonner'
 import { useConfig } from '@/hooks/use-config'
 
 export function ConfigManager() {
   const [isEditing, setIsEditing] = useState(false)
   const [backendUrl, setBackendUrl] = useState('')
   const [isSaving, setIsSaving] = useState(false)
-  const { toast } = useToast()
   const { config, reload } = useConfig()
 
   const handleEdit = () => {
@@ -23,40 +22,25 @@ export function ConfigManager() {
 
   const handleSave = async () => {
     if (!backendUrl.trim()) {
-      toast({
-        title: "Invalid URL",
+      toast.error("Invalid URL", {
         description: "Please enter a valid backend URL.",
-        variant: "destructive",
       })
       return
     }
 
     setIsSaving(true)
     try {
-      // In a real application, you would save this to a server endpoint
-      // For now, we'll just update the local config and reload
-      const newConfig = {
-        ...config,
-        backend: {
-          ...config?.backend,
-          baseUrl: backendUrl.trim()
-        }
-      }
-      
-      // Update the config.json file (this would typically be done via an API)
-      // For now, we'll just show a success message
-      toast({
-        title: "Configuration updated",
+      // In a real application, this would be saved to a server endpoint.
+      // For this example, we'll just show a success message.
+      toast.success("Configuration updated", {
         description: "Backend URL has been updated. Please restart the application for changes to take effect.",
       })
       
       setIsEditing(false)
-      reload()
+      reload() // This will reload the config from the file
     } catch (error) {
-      toast({
-        title: "Save failed",
+      toast.error("Save failed", {
         description: "Failed to save configuration. Please try again.",
-        variant: "destructive",
       })
     } finally {
       setIsSaving(false)
@@ -124,7 +108,7 @@ export function ConfigManager() {
         </div>
         
         <p className="text-xs text-muted-foreground">
-          Edit the backend server URL in the config.json file to change this setting permanently.
+          Edit the backend server URL in the public/config.json file to change this setting permanently.
         </p>
       </CardContent>
     </Card>
