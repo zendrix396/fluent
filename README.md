@@ -43,7 +43,7 @@ git clone <repository-url>
 cd fluent
 ```
 
-### 2. Backend Setup
+### 2. Setup
 On Windows
 ```bash
 .\start-fluent.bat 
@@ -55,15 +55,6 @@ chmod +x start-fluent.sh
 ```
 
 The backend API will be available at `http://localhost:8000`
-
-### 3. Frontend Setup
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
 The frontend will be available at `http://localhost:3000`
 
 ## Usage
