@@ -7,7 +7,7 @@ __pycache__/
 .Python
 pip-log.txt
 pip-delete-this-directory.txt
-# frontend2/ 
+frontend2/ 
 # IDE
 .vscode/
 .idea/
