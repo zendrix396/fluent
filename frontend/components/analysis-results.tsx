@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Download, FileText, Calculator, Loader2, TrendingUp } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useConfig } from '@/hooks/use-config'
 import type { AnalysisResult } from '@/app/page'
 
 interface AnalysisResultsProps {
@@ -16,14 +17,13 @@ interface AnalysisResultsProps {
   isAnalyzing: boolean
 }
 
-const API_BASE_URL = 'http://localhost:8000'
-
 export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
   const [predictionInputs, setPredictionInputs] = useState<{[key: string]: string}>({})
   const [predictionResult, setPredictionResult] = useState<any>(null)
   const [isPredicting, setIsPredicting] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const { toast } = useToast()
+  const { backendUrl } = useConfig()
 
   const handlePredict = async () => {
     if (!result || !(result as any).model?.feature_names) {
@@ -68,7 +68,7 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
     setIsPredicting(true)
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/predict`, {
+      const response = await axios.post(`${backendUrl}/predict`, {
         x_values: [inputValues],
         coefficients: (result as any).model?.coefficients ?? [],
         intercept: (result as any).model?.intercepts ?? (result as any).model?.intercept ?? 0,
@@ -140,7 +140,7 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
           formData.append('accuracies', JSON.stringify([(result as any).accuracy || '']));
       }
 
-      const response = await axios.post(`${API_BASE_URL}/generate-pdf`, formData);
+      const response = await axios.post(`${backendUrl}/generate-pdf`, formData);
 
       if (response.data?.job_id) {
         const { job_id, filename } = response.data;
@@ -152,7 +152,7 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
         // Use a slight delay to allow the server to process the PDF
         setTimeout(() => {
             const link = document.createElement('a');
-            link.href = `${API_BASE_URL}/download-report/${job_id}`;
+            link.href = `${backendUrl}/download-report/${job_id}`;
             link.setAttribute('download', filename);
             document.body.appendChild(link);
             link.click();

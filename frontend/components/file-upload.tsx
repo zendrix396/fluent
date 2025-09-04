@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Upload, FileText, AlertCircle, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useConfig } from '@/hooks/use-config'
 import type { AnalysisResult } from '@/app/page'
 
 interface FileUploadProps {
@@ -25,8 +26,6 @@ interface FileInfo {
   head: any[]
 }
 
-const API_BASE_URL = 'http://localhost:8000'
-
 export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: FileUploadProps) {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [fileInfo, setFileInfo] = useState<FileInfo | null>(null)
@@ -34,6 +33,7 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
   const [selectedYColumns, setSelectedYColumns] = useState<string[]>([])
   const [polyDegree, setPolyDegree] = useState<number>(1)
   const { toast } = useToast()
+  const { backendUrl, loading: configLoading } = useConfig()
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0]
@@ -59,7 +59,7 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
       const formData = new FormData()
       formData.append('file', file)
 
-      const response = await axios.post(`${API_BASE_URL}/upload-file`, formData, {
+      const response = await axios.post(`${backendUrl}/upload-file`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -83,7 +83,7 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
     } finally {
       setIsAnalyzing(false)
     }
-  }, [toast, setIsAnalyzing])
+  }, [toast, setIsAnalyzing, backendUrl])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -115,7 +115,7 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
       formData.append('y_columns', JSON.stringify(selectedYColumns))
       formData.append('poly_degree', String(polyDegree || 1))
 
-      const response = await axios.post(`${API_BASE_URL}/analyze-data`, formData, {
+      const response = await axios.post(`${backendUrl}/analyze-data`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

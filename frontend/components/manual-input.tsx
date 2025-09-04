@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Plus, Trash2, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useConfig } from '@/hooks/use-config'
 import type { AnalysisResult } from '@/app/page'
 
 interface DataPoint {
@@ -21,8 +22,6 @@ interface ManualInputProps {
   setIsAnalyzing: (analyzing: boolean) => void
 }
 
-const API_BASE_URL = 'http://localhost:8000'
-
 export function ManualInput({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: ManualInputProps) {
   const [dataPoints, setDataPoints] = useState<DataPoint[]>([
     { x: '', y: '' },
@@ -30,6 +29,7 @@ export function ManualInput({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }:
   ])
   const [isMultiDimensional, setIsMultiDimensional] = useState(false)
   const { toast } = useToast()
+  const { backendUrl } = useConfig()
 
   const addDataPoint = () => {
     setDataPoints([...dataPoints, { x: '', y: '' }])
@@ -105,7 +105,7 @@ export function ManualInput({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }:
     setIsAnalyzing(true)
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/analyze-manual`, {
+      const response = await axios.post(`${backendUrl}/analyze-manual`, {
         data_points: parsedData
       })
 
