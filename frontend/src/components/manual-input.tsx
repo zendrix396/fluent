@@ -22,6 +22,14 @@ interface ManualInputProps {
   setIsAnalyzing: (analyzing: boolean) => void
 }
 
+interface FileInfo {
+  filename: string
+  shape: [number, number]
+  columns: string[]
+  numeric_columns: string[]
+  head: unknown[]
+}
+
 interface ParsedDataPoint {
   x: number | number[]
   y: number

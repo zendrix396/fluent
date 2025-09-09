@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Upload, FileText, AlertCircle, Loader2 } from 'lucide-react'
+import { Upload, FileText, AlertCircle, Loader2, Database } from 'lucide-react'
 import { toast } from 'sonner'
 import { useConfig } from '@/hooks/use-config'
 import type { AnalysisResult } from '@/app/page'
@@ -32,6 +32,7 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
   const [selectedXColumns, setSelectedXColumns] = useState<string[]>([])
   const [selectedYColumns, setSelectedYColumns] = useState<string[]>([])
   const [polyDegree, setPolyDegree] = useState<number>(1)
+  const [usingExampleData, setUsingExampleData] = useState(false)
   const { backendUrl } = useConfig()
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -49,6 +50,7 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
     }
 
     setUploadedFile(file)
+    setUsingExampleData(false) // Reset example data state
     setIsAnalyzing(true)
 
     try {
@@ -78,6 +80,58 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
       setIsAnalyzing(false)
     }
   }, [setIsAnalyzing, backendUrl])
+
+  const loadExampleData = async () => {
+    setIsAnalyzing(true)
+    
+    try {
+      // Fetch the CSV file from the public folder
+      const response = await fetch('/Cricket_ODI_DataSet.csv')
+      const csvText = await response.text()
+      
+      // Create a File object from the CSV text
+      const csvBlob = new Blob([csvText], { type: 'text/csv' })
+      const csvFile = new File([csvBlob], 'Cricket_ODI_DataSet.csv', { type: 'text/csv' })
+      
+      // Upload the file to get metadata
+      const formData = new FormData()
+      formData.append('file', csvFile)
+
+      const uploadResponse = await axios.post(`${backendUrl}/upload-file`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+
+      if (uploadResponse.data.success) {
+        setUploadedFile(csvFile)
+        setFileInfo(uploadResponse.data.data)
+        setUsingExampleData(true)
+        setSelectedXColumns([])
+        setSelectedYColumns([])
+        toast.success("Example data loaded", {
+          description: `Loaded Cricket ODI dataset with ${uploadResponse.data.data.shape[0]} rows and ${uploadResponse.data.data.shape[1]} columns.`,
+        })
+      }
+    } catch (error: unknown) {
+      console.error('Example data loading error:', error)
+      const errorMessage = error instanceof Error ? error.message : "Failed to load example data. Please try again."
+      toast.error("Loading failed", {
+        description: errorMessage,
+      })
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
+  const resetUpload = () => {
+    setUploadedFile(null)
+    setFileInfo(null)
+    setSelectedXColumns([])
+    setSelectedYColumns([])
+    setPolyDegree(1)
+    setUsingExampleData(false)
+  }
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -132,41 +186,107 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardContent className="p-6">
-          <div
-            {...getRootProps()}
-            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-              isDragActive
-                ? 'border-primary bg-primary/5'
-                : 'border-muted-foreground/25 hover:border-primary/50'
-            }`}
-          >
-            <input {...getInputProps()} />
-            <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            {isDragActive ? (
-              <p className="text-primary">Drop the file here...</p>
-            ) : (
-              <div>
-                <p className="text-foreground font-medium mb-2">
-                  Drag & drop your data file here, or click to select
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Supports CSV, XLSX, and JSON files
-                </p>
+      {/* File Upload or Example Data Selection */}
+      {!uploadedFile && !fileInfo && (
+        <>
+          <Card>
+            <CardContent className="p-6">
+              <div
+                {...getRootProps()}
+                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                  isDragActive
+                    ? 'border-primary bg-primary/5'
+                    : 'border-muted-foreground/25 hover:border-primary/50'
+                }`}
+              >
+                <input {...getInputProps()} />
+                <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                {isDragActive ? (
+                  <p className="text-primary">Drop the file here...</p>
+                ) : (
+                  <div>
+                    <p className="text-foreground font-medium mb-2">
+                      Drag & drop your data file here, or click to select
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Supports CSV, XLSX, and JSON files
+                    </p>
+                  </div>
+                )}
               </div>
-            )}
+            </CardContent>
+          </Card>
+
+          {/* OR Divider */}
+          <div className="flex items-center gap-4">
+            <div className="flex-1 h-px bg-muted-foreground/25"></div>
+            <span className="text-sm text-muted-foreground">OR</span>
+            <div className="flex-1 h-px bg-muted-foreground/25"></div>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Example Data Option */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center">
+                <Database className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-foreground font-medium mb-2">
+                  Try with example data
+                </p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Use the Cricket ODI dataset to explore the features
+                </p>
+                <Button 
+                  onClick={loadExampleData}
+                  disabled={isAnalyzing}
+                  variant="outline"
+                  className="w-full max-w-xs"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Loading Example Data...
+                    </>
+                  ) : (
+                    <>
+                      <Database className="mr-2 h-4 w-4" />
+                      Load Cricket ODI Data
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       {uploadedFile && fileInfo && (
         <Card>
           <CardContent className="p-4">
             <div className="flex items-start space-x-3">
-              <FileText className="h-5 w-5 text-primary mt-0.5" />
+              {usingExampleData ? (
+                <Database className="h-5 w-5 text-primary mt-0.5" />
+              ) : (
+                <FileText className="h-5 w-5 text-primary mt-0.5" />
+              )}
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-foreground">{fileInfo.filename}</p>
+                <div className="flex items-center justify-between">
+                  <p className="font-medium text-foreground">
+                    {fileInfo.filename}
+                    {usingExampleData && (
+                      <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                        Example Data
+                      </span>
+                    )}
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={resetUpload}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    Reset
+                  </Button>
+                </div>
                 <p className="text-sm text-muted-foreground">
                   {fileInfo.shape[0]} rows × {fileInfo.shape[1]} columns
                 </p>
@@ -271,10 +391,10 @@ export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: 
           {isAnalyzing ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Analyzing Data...
+              {usingExampleData ? 'Analyzing Cricket ODI Data...' : 'Analyzing Data...'}
             </>
           ) : (
-            'Analyze Data'
+            usingExampleData ? 'Analyze Cricket ODI Data' : 'Analyze Data'
           )}
         </Button>
       )}
