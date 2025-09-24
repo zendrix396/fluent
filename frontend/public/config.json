@@ -1,5 +1,5 @@
 {
   "backend": {
-    "baseUrl": "https://api.zendrix.dev"
+    "baseUrl": "https://gce61ejzvh.execute-api.ap-south-1.amazonaws.com"
   }
 }

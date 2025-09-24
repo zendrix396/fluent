@@ -11,9 +11,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PolynomialFeatures
 import matplotlib.pyplot as plt
 
-from backend.schemas.analysis import ManualDataInput
-from backend.services.ml.sklearn_fluent import req_details
-from backend.core.state import models_store
+from ...schemas.analysis import ManualDataInput
+from ...services.ml.sklearn_fluent import req_details
+from ...core.state import models_store
 
 router = APIRouter()
 

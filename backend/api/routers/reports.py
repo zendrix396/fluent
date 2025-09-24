@@ -6,8 +6,8 @@ import os
 import uuid
 from datetime import datetime
 
-from backend.core.state import pdf_jobs
-from backend.services.reporting.pdf_reportlab import generate_pdf_report
+from ...core.state import pdf_jobs
+from ...services.reporting.pdf_reportlab import generate_pdf_report
 
 router = APIRouter()
 

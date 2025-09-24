@@ -2,9 +2,9 @@ from fastapi import APIRouter, HTTPException
 from typing import List
 import numpy as np
 
-from backend.schemas.analysis import PredictionRequest
-from backend.core.state import models_store
-from backend.utils.features import expand_with_feature_names
+from ...schemas.analysis import PredictionRequest
+from ...core.state import models_store
+from ...utils.features import expand_with_feature_names
 
 router = APIRouter()
 

@@ -1,0 +1,14 @@
+service: fluent-docker
+
+provider:
+  name: aws
+  region: ap-south-1
+
+functions:
+  api:
+    image: 315836106509.dkr.ecr.ap-south-1.amazonaws.com/fluent:latest
+    events:
+      - httpApi: '*'
+    timeout: 30
+    memorySize: 2048
+
