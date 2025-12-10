@@ -29,6 +29,7 @@ Thumbs.db
 inspiration/
 fluent/
 # Next.js
+.serverless/
 frontend/.next/
 frontend/out/
 frontend/dist/
