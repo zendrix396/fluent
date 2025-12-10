@@ -16,7 +16,7 @@ export function ConfigManager() {
   const { config, reload } = useConfig()
 
   const handleEdit = () => {
-    setBackendUrl(config?.backend.baseUrl || 'http://localhost:8000')
+    setBackendUrl(config?.backend.baseUrl || 'https://fluent-bc62.onrender.com')
     setIsEditing(true)
   }
 
@@ -69,7 +69,7 @@ export function ConfigManager() {
                 id="backend-url"
                 value={backendUrl}
                 onChange={(e) => setBackendUrl(e.target.value)}
-                placeholder="http://localhost:8000"
+                placeholder="https://fluent-bc62.onrender.com"
               />
               <Button
                 size="sm"
@@ -94,7 +94,7 @@ export function ConfigManager() {
           ) : (
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
-                {config?.backend.baseUrl || 'http://localhost:8000'}
+                {config?.backend.baseUrl || 'https://fluent-bc62.onrender.com'}
               </span>
               <Button
                 size="sm"

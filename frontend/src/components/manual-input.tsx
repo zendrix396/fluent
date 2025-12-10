@@ -4,12 +4,11 @@ import { useState } from 'react'
 import axios from 'axios'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, Trash2, Loader2 } from 'lucide-react'
+import { Plus, Trash2, Loader2, Keyboard } from 'lucide-react'
 import { toast } from 'sonner'
 import { useConfig } from '@/hooks/use-config'
-import type { AnalysisResult } from '@/app/page'
+import type { AnalysisResult } from '@/types'
 
 interface DataPoint {
   x: string
@@ -22,14 +21,6 @@ interface ManualInputProps {
   setIsAnalyzing: (analyzing: boolean) => void
 }
 
-interface FileInfo {
-  filename: string
-  shape: [number, number]
-  columns: string[]
-  numeric_columns: string[]
-  head: unknown[]
-}
-
 interface ParsedDataPoint {
   x: number | number[]
   y: number
@@ -37,14 +28,15 @@ interface ParsedDataPoint {
 
 export function ManualInput({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: ManualInputProps) {
   const [dataPoints, setDataPoints] = useState<DataPoint[]>([
-    { x: '', y: '' },
-    { x: '', y: '' },
+    { x: '1.5', y: '10' },
+    { x: '2.0', y: '15' },
+    { x: '2.5', y: '20' },
+    { x: '3.0', y: '25' },
+    { x: '3.5', y: '30' },
   ])
   const { backendUrl } = useConfig()
 
-  const addDataPoint = () => {
-    setDataPoints([...dataPoints, { x: '', y: '' }])
-  }
+  const addDataPoint = () => setDataPoints([...dataPoints, { x: '', y: '' }])
 
   const removeDataPoint = (index: number) => {
     if (dataPoints.length > 2) {
@@ -68,33 +60,20 @@ export function ManualInput({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }:
 
   const validateAndParseData = (): ParsedDataPoint[] | null => {
     const validPoints = dataPoints.filter(point => point.x.trim() && point.y.trim())
-    
     if (validPoints.length < 2) {
-      toast.error("Insufficient data", {
-        description: "Please provide at least 2 valid data points.",
-      })
+      toast.error("Insufficient Data", { description: "Minimum 2 points required." })
       return null
     }
-
     const parsedPoints: ParsedDataPoint[] = []
-
     for (const point of validPoints) {
       const xValue = parseXValue(point.x)
       const yValue = parseFloat(point.y)
-
       if (isNaN(yValue) || (typeof xValue === 'number' && isNaN(xValue))) {
-        toast.error("Invalid data", {
-          description: "Please ensure all values are valid numbers.",
-        })
+        toast.error("Invalid Input", { description: "Numbers only." })
         return null
       }
-
-      parsedPoints.push({
-        x: xValue,
-        y: yValue
-      })
+      parsedPoints.push({ x: xValue, y: yValue })
     }
-
     return parsedPoints
   }
 
@@ -103,109 +82,71 @@ export function ManualInput({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }:
     if (!parsedData) return
 
     setIsAnalyzing(true)
-
     try {
-      const response = await axios.post(`${backendUrl}/analyze-manual`, {
-        data_points: parsedData
-      })
-
+      const response = await axios.post(`${backendUrl}/analyze-manual`, { data_points: parsedData })
       if (response.data.success) {
         onAnalysisComplete(response.data)
-        toast.success("Analysis complete", {
-          description: `Generated the required function(s).`,
-        })
+        toast.success("Analysis Complete")
       }
-    } catch (error: unknown) {
-      console.error('Analysis error:', error)
-      const errorMessage = error instanceof Error ? error.message : "Failed to analyze data. Please try again."
-      toast.error("Analysis failed", {
-        description: errorMessage,
-      })
+    } catch {
+      toast.error("Analysis Failed")
     } finally {
       setIsAnalyzing(false)
     }
   }
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Data Points</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Enter your data points manually. For multi-dimensional input, separate X values with commas (e.g., &quot;1,2,3&quot;).
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {dataPoints.map((point, index) => (
-            <div key={index} className="flex items-center space-x-2">
-              <div className="flex-1">
-                <Label htmlFor={`x-${index}`} className="sr-only">
-                  X value {index + 1}
-                </Label>
-                <Input
-                  id={`x-${index}`}
-                  placeholder="X value (e.g., 1.5 or 1,2,3)"
-                  value={point.x}
-                  onChange={(e) => updateDataPoint(index, 'x', e.target.value)}
-                />
-              </div>
-              <div className="flex-1">
-                <Label htmlFor={`y-${index}`} className="sr-only">
-                  Y value {index + 1}
-                </Label>
-                <Input
-                  id={`y-${index}`}
-                  placeholder="Y value"
-                  value={point.y}
-                  onChange={(e) => updateDataPoint(index, 'y', e.target.value)}
-                />
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => removeDataPoint(index)}
-                disabled={dataPoints.length <= 2}
-                className="shrink-0"
-              >
+    <Card className="border-zinc-200 dark:border-zinc-800 bg-white/0 dark:bg-zinc-950/0 backdrop-blur-xl">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-zinc-900 dark:text-white">
+            <Keyboard className="w-5 h-5 text-zinc-500" />
+            Manual Entry
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="bg-zinc-50/50 dark:bg-zinc-900/30 backdrop-blur-sm rounded-lg p-4 border border-zinc-200 dark:border-zinc-800 space-y-3 max-h-[400px] overflow-y-auto">
+            {dataPoints.map((point, index) => (
+            <div key={index} className="flex items-center gap-3 animate-fade-in-up">
+                <div className="flex-1 relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-mono">X</span>
+                    <Input
+                        className="pl-8 font-mono text-sm bg-white/0 dark:bg-zinc-950/0 border-zinc-200 dark:border-zinc-800"
+                        placeholder="1.5"
+                        value={point.x}
+                        onChange={(e) => updateDataPoint(index, 'x', e.target.value)}
+                    />
+                </div>
+                <div className="flex-1 relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-mono">Y</span>
+                    <Input
+                        className="pl-8 font-mono text-sm bg-white/0 dark:bg-zinc-950/0 border-zinc-200 dark:border-zinc-800"
+                        placeholder="10"
+                        value={point.y}
+                        onChange={(e) => updateDataPoint(index, 'y', e.target.value)}
+                    />
+                </div>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeDataPoint(index)}
+                    disabled={dataPoints.length <= 2}
+                    className="h-9 w-9 text-zinc-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+                >
                 <Trash2 className="h-4 w-4" />
-              </Button>
+                </Button>
             </div>
-          ))}
-        </CardContent>
-      </Card>
+            ))}
+        </div>
 
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={addDataPoint}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Data Point
-        </Button>
-        
-        <Button 
-          onClick={handleAnalyze} 
-          disabled={isAnalyzing}
-        >
-          {isAnalyzing ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Analyzing...
-            </>
-          ) : (
-            'Analyze Data'
-          )}
-        </Button>
-      </div>
-
-      <Card>
-        <CardContent className="p-4">
-          <div className="text-sm text-muted-foreground">
-            <p className="font-medium mb-2">Examples:</p>
-            <div className="space-y-1">
-              <p><strong>Single dimension:</strong> X: 1, Y: 3</p>
-              <p><strong>Multi-dimension:</strong> X: 1,2,3, Y: 7</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        <div className="flex gap-4">
+            <Button variant="outline" onClick={addDataPoint} className="flex-1 border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-950/20">
+                <Plus className="mr-2 h-4 w-4" /> Add Row
+            </Button>
+            <Button onClick={handleAnalyze} disabled={isAnalyzing} className="flex-1 !bg-primary/50 dark:!bg-primary/30 backdrop-blur-sm !border-0 !shadow-none">
+                {isAnalyzing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Analyze"}
+            </Button>
+        </div>
+      </CardContent>
+    </Card>
   )
 }

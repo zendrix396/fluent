@@ -1,0 +1,1733 @@
+================================================================================
+COLLECTED .TSX FILES FROM SRC DIRECTORY
+Excluded: ui folder, node_modules
+================================================================================
+
+
+================================================================================
+FILE: app/layout.tsx
+================================================================================
+
+import type { Metadata } from "next";
+import { Inter, JetBrains_Mono } from "next/font/google";
+import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/toaster";
+
+const inter = Inter({ 
+  subsets: ["latin"], 
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const jetbrains = JetBrains_Mono({ 
+  subsets: ["latin"], 
+  variable: "--font-mono",
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: "Fluent - Data to Equation",
+  description: "Upload your dataset and let our engine derive the precise mathematical function that defines it.",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en" suppressHydrationWarning className="dark">
+      <body className={`${inter.variable} ${jetbrains.variable} bg-black text-white antialiased selection:bg-white selection:text-black`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster />
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
+
+
+================================================================================
+FILE: app/page.tsx
+================================================================================
+
+"use client";
+
+import React, { useRef } from "react";
+import Link from "next/link";
+import { ArrowRight, FileSpreadsheet, Zap, BarChart2, Cpu, BrainCircuit, Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ReactLenis } from "lenis/react";
+import { Button } from "@/components/ui/button";
+
+gsap.registerPlugin(ScrollTrigger);
+
+// --- Navbar Component ---
+const Navbar = () => {
+  const { theme, setTheme } = useTheme();
+  
+  return (
+    <nav className="fixed top-0 left-0 w-full z-50 px-6 py-6 flex justify-between items-center bg-background/80 backdrop-blur-md border-b border-border/50 transition-colors duration-300">
+      <Link href="/" className="flex items-center gap-2 group">
+        <div className="w-8 h-8 bg-foreground text-background flex items-center justify-center rounded-sm transition-colors">
+          <BrainCircuit className="w-5 h-5" />
+        </div>
+        <span className="font-bold tracking-tighter text-xl text-foreground">FLUENT</span>
+      </Link>
+      
+      <div className="flex items-center gap-6">
+        <div className="hidden md:flex items-center gap-6 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+          <a href="#features" className="hover:text-foreground transition-colors cursor-pointer">Capabilities</a>
+          <a href="#process" className="hover:text-foreground transition-colors cursor-pointer">Process</a>
+        </div>
+        
+        <div className="h-4 w-px bg-border hidden md:block"></div>
+
+        <button
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          className="relative p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+        >
+          <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+          <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+        </button>
+
+        <Link href="/workbench" className="cursor-pointer">
+          <Button variant="default" className="rounded-full font-bold cursor-pointer border border-primary/40 bg-primary/90 backdrop-blur-sm hover:bg-primary hover:border-primary/50 hover:shadow-md transition-all">
+            Launch App
+          </Button>
+        </Link>
+      </div>
+    </nav>
+  );
+};
+
+// --- Feature Card ---
+const FeatureCard = ({ icon, title, desc, index }: { icon: React.ReactNode; title: string; desc: string; index: number }) => (
+  <div className="feature-card group relative p-8 border border-border/50 bg-card/50 backdrop-blur-sm hover:border-border/70 hover:bg-card/70 transition-all duration-500 overflow-hidden h-full flex flex-col justify-between rounded-xl">
+    <div>
+      <div className="font-mono text-xs text-muted-foreground mb-4">0{index + 1}</div>
+      <div className="mb-6 p-3 bg-muted/50 w-fit rounded-lg text-foreground group-hover:scale-110 transition-transform duration-500 ease-out">
+        {icon}
+      </div>
+      <h3 className="text-2xl font-bold mb-3 text-foreground">{title}</h3>
+    </div>
+    <p className="text-muted-foreground leading-relaxed">{desc}</p>
+  </div>
+);
+
+export default function Home() {
+  const container = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    // Hero Text Stagger
+    const tl = gsap.timeline();
+    tl.from(".hero-line", { y: "110%", stagger: 0.1, duration: 1.2, ease: "power4.out" })
+      .from(".hero-sub", { opacity: 0, y: 20, duration: 1 }, "-=0.8")
+      .from(".hero-ui-container", { 
+        y: 100, 
+        opacity: 0, 
+        rotationX: 10,
+        duration: 1.5, 
+        ease: "power3.out" 
+      }, "-=1");
+
+    // Floating animation for Hero UI
+    gsap.to(".hero-ui-container", {
+      y: "-=20",
+      rotationX: 5,
+      duration: 3,
+      repeat: -1,
+      yoyo: true,
+      ease: "sine.inOut",
+      delay: 1.5
+    });
+
+    // Process Section Pinning
+    if (typeof window !== "undefined" && window.innerWidth > 768) {
+      ScrollTrigger.create({
+        trigger: ".process-section",
+        start: "top top",
+        end: "bottom bottom",
+        pin: ".process-left",
+        pinSpacing: false
+      });
+    }
+  }, { scope: container });
+
+  return (
+    <ReactLenis root>
+      <div ref={container} className="bg-background min-h-screen text-foreground selection:bg-foreground selection:text-background transition-colors duration-300">
+        <Navbar />
+
+        {/* Hero Section */}
+        <section className="relative min-h-screen flex flex-col justify-center items-center pt-32 px-6 overflow-hidden">
+          {/* Background Grid */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
+          
+          {/* Glow Effect */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[100px] pointer-events-none"></div>
+
+          <div className="relative z-10 max-w-5xl mx-auto text-center mb-16">
+            <div className="overflow-hidden mb-2">
+              <h1 className="hero-line text-[12vw] md:text-[8rem] font-bold leading-[0.85] tracking-tighter text-foreground">
+                DATA TO
+              </h1>
+            </div>
+            <div className="overflow-hidden mb-8">
+              <h1 className="hero-line text-[12vw] md:text-[8rem] font-bold leading-[0.85] tracking-tighter text-foreground/60">
+                EQUATION
+              </h1>
+            </div>
+            
+            <p className="hero-sub text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 font-light">
+              Stop guessing. Upload your dataset and let our engine derive the precise mathematical function that defines it in seconds.
+            </p>
+
+            <div className="hero-sub flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link href="/workbench" className="cursor-pointer">
+                 <Button size="lg" className="rounded-full px-8 h-14 text-lg cursor-pointer border border-primary/40 bg-primary/90 backdrop-blur-sm hover:bg-primary hover:border-primary/50 hover:shadow-lg transition-all">
+                    Start Analyzing <ArrowRight className="ml-2 w-5 h-5" />
+                 </Button>
+              </Link>
+              <a href="#features" className="cursor-pointer">
+                <Button variant="outline" size="lg" className="rounded-full px-8 h-14 text-lg cursor-pointer border-border/60 bg-background/50 backdrop-blur-sm hover:bg-muted/50 hover:border-border/80 transition-all">
+                    Explore Docs
+                </Button>
+              </a>
+            </div>
+          </div>
+
+          {/* UI Mockup - 3D Perspective Container */}
+          <div className="w-full max-w-5xl relative px-4 perspective-2000">
+            <div className="hero-ui-container transform-style-3d origin-center border border-border/50 bg-card/60 backdrop-blur-xl rounded-t-2xl overflow-hidden shadow-lg">
+              {/* Fake Window Header */}
+              <div className="h-10 border-b border-border/50 flex items-center px-4 gap-2 bg-card/40">
+                <div className="w-3 h-3 rounded-full bg-red-500/30 border border-red-500/40"></div>
+                <div className="w-3 h-3 rounded-full bg-yellow-500/30 border border-yellow-500/40"></div>
+                <div className="w-3 h-3 rounded-full bg-green-500/30 border border-green-500/40"></div>
+                <div className="ml-4 font-mono text-[10px] text-muted-foreground">fluent_workbench_v2.0.exe</div>
+              </div>
+              
+              <div className="p-8 grid md:grid-cols-3 gap-8 bg-card/40">
+                {/* Mock Code */}
+                <div className="font-mono text-xs text-muted-foreground space-y-2">
+                   <p><span className="text-primary">const</span> data = [</p>
+                   <p className="pl-4">{`{ x: 1, y: 2.4 },`}</p>
+                   <p className="pl-4">{`{ x: 2, y: 8.9 },`}</p>
+                   <p className="pl-4">{`{ x: 3, y: 18.1 }`}</p>
+                   <p>]</p>
+                   <p className="text-primary/70 mt-4">// Analyzing regression...</p>
+                </div>
+                {/* Mock Graph Area */}
+                <div className="md:col-span-2 h-48 bg-muted/30 rounded border border-border/50 relative overflow-hidden">
+                  <svg className="w-full h-full absolute bottom-0" preserveAspectRatio="none">
+                    <path d="M0,190 Q150,180 300,50 T600,20" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary/60" />
+                  </svg>
+                  {/* Floating Result Badge */}
+                  <div className="absolute top-4 right-4 bg-card/80 backdrop-blur-sm border border-border/50 p-3 rounded-lg shadow-md text-xs font-mono">
+                    <span className="text-muted-foreground">f(x) =</span> <span className="font-bold text-foreground">2.1x² + 0.3</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Features - Bento Grid */}
+        <section id="features" className="py-32 px-6 max-w-7xl mx-auto">
+          <div className="mb-20 border-b border-border/50 pb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <h2 className="text-4xl md:text-6xl font-light tracking-tight text-foreground">Capabilities</h2>
+            <p className="font-mono text-xs text-muted-foreground">[ SYSTEM_MODULES ]</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[280px]">
+            <div className="lg:col-span-2">
+               <FeatureCard
+                 index={0}
+                 icon={<BrainCircuit className="w-6 h-6" />}
+                 title="Regression Engine"
+                 desc="Our core algorithm instantly identifies linear, polynomial, exponential, and logarithmic relationships in your data."
+               />
+            </div>
+            <div>
+               <FeatureCard
+                 index={1}
+                 icon={<FileSpreadsheet className="w-6 h-6" />}
+                 title="Smart Parsing"
+                 desc="Drop any CSV, JSON, or Excel file. Fluent automatically detects headers."
+               />
+            </div>
+            <div>
+               <FeatureCard
+                 index={2}
+                 icon={<Zap className="w-6 h-6" />}
+                 title="Live Predict"
+                 desc="Use the interactive console to input X values and get Y instantly."
+               />
+            </div>
+            <div>
+               <FeatureCard
+                 index={3}
+                 icon={<BarChart2 className="w-6 h-6" />}
+                 title="Visualizer"
+                 desc="See your raw data points plotted against the function curve in real-time."
+               />
+            </div>
+             <div className="lg:col-span-2">
+               <FeatureCard
+                 index={4}
+                 icon={<Cpu className="w-6 h-6" />}
+                 title="Auto-Tuning"
+                 desc="Tests multiple polynomial degrees to find the perfect balance between fit and complexity."
+               />
+            </div>
+            <div>
+               <FeatureCard
+                 index={5}
+                 icon={<FileSpreadsheet className="w-6 h-6" />}
+                 title="PDF Export"
+                 desc="Generate professional laboratory or business reports with a single click."
+               />
+            </div>
+          </div>
+        </section>
+
+        {/* Process Section */}
+        <section id="process" className="process-section relative bg-muted/20 py-32 border-y border-border/50">
+          <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row gap-20">
+            <div className="process-left md:w-1/3 h-fit">
+              <div className="md:sticky md:top-32">
+                <p className="font-mono text-sm mb-4 tracking-widest text-muted-foreground uppercase">Workflow</p>
+                <h2 className="text-5xl md:text-7xl font-bold leading-[0.9] tracking-tighter mb-8 text-foreground">
+                  HOW IT<br/>WORKS
+                </h2>
+                <p className="text-muted-foreground text-lg leading-relaxed">
+                  Complex mathematics distilled into a three-step user experience. No coding required.
+                </p>
+              </div>
+            </div>
+
+            <div className="md:w-2/3 space-y-24 pt-10 md:pt-0">
+              {[
+                { title: "Upload Source", desc: "Drag and drop your dataset. We handle cleaning, normalization, and outlier detection automatically.", num: "01" },
+                { title: "Curve Fitting", desc: "Our engine runs regression analysis across multiple models simultaneously to minimize error (MSE).", num: "02" },
+                { title: "Equation Extraction", desc: "Get the clean mathematical formula (LaTeX or Plain Text) ready for your papers or codebase.", num: "03" }
+              ].map((step, i) => (
+                <div key={i} className="group border-l border-border/50 pl-12 relative pb-10 last:pb-0">
+                  <span className="absolute -left-[9px] top-0 w-[17px] h-[17px] rounded-full border border-border/60 bg-background group-hover:bg-foreground transition-colors duration-500"></span>
+                  <span className="font-mono text-xs font-bold text-muted-foreground mb-4 block">{step.num}</span>
+                  <h3 className="text-3xl font-bold mb-4 text-foreground">{step.title}</h3>
+                  <p className="text-lg text-muted-foreground max-w-md">{step.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <section className="py-24 flex flex-col justify-center items-center relative overflow-hidden bg-background">
+           <div className="relative z-10 text-center px-4">
+             <h2 className="text-[10vw] font-bold leading-none tracking-tighter text-foreground mb-12">
+               SOLVE IT.
+             </h2>
+             <Link href="/workbench" className="cursor-pointer">
+              <Button size="lg" className="rounded-full h-16 px-10 text-xl cursor-pointer border border-primary/40 bg-primary/90 backdrop-blur-sm hover:bg-primary hover:border-primary/50 hover:shadow-lg transition-all">
+                Launch Workbench
+              </Button>
+             </Link>
+           </div>
+           
+           <div className="mt-20 border-t border-border/50 w-full pt-8 flex justify-between px-8 text-xs font-mono text-muted-foreground uppercase">
+             <p>© 2024 Fluent Analytics.</p>
+             <p>v2.1.0</p>
+           </div>
+        </section>
+
+      </div>
+    </ReactLenis>
+  );
+}
+
+
+================================================================================
+FILE: app/workbench/page.tsx
+================================================================================
+
+"use client";
+
+import { useState, useRef } from "react";
+import Link from "next/link";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileUpload } from "@/components/file-upload";
+import { ManualInput } from "@/components/manual-input";
+import { AnalysisResults } from "@/components/analysis-results";
+import { BrainCircuit, Moon, Sun, Settings2, RefreshCw, FileSpreadsheet, AlertCircle, Play, Download } from "lucide-react";
+import { Button } from "@/components/fluent-button";
+import { useTheme } from "next-themes";
+import type { AnalysisResult } from "@/app/page";
+
+export default function Workbench() {
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const { theme, setTheme } = useTheme();
+
+  return (
+    <div className="min-h-screen bg-background transition-colors duration-300">
+      {/* Navbar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md transition-colors duration-300">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Link href="/" className="flex items-center gap-2 cursor-pointer group">
+              <div className="p-2 bg-muted rounded border border-border/50 group-hover:border-primary/30 transition-colors">
+                <BrainCircuit className="h-6 w-6 text-foreground" />
+              </div>
+              <span className="text-xl font-bold tracking-wider text-foreground">FLUENT</span>
+            </Link>
+
+            <div className="flex items-center gap-4">
+              <Link
+                href="/"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Back to Home
+              </Link>
+              <button
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="relative p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+              >
+                <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content - with proper top padding for navbar */}
+      <div className="pt-20 pb-8 px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* LEFT PANEL: CONFIGURATION */}
+        <div className="lg:col-span-5 flex flex-col gap-6">
+        {/* Upload Card */}
+        <div className="bg-card border border-border/50 rounded-xl p-6 shadow-sm transition-colors duration-300 w-full mt-2 bg-gradient-to-br from-background via-background to-primary/5">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+              <FileSpreadsheet className="w-5 h-5 text-zinc-500" />
+              Data Source
+            </h2>
+          </div>
+
+          <Tabs defaultValue="upload" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-lg border border-zinc-200 dark:border-zinc-800">
+              <TabsTrigger 
+                value="upload" 
+                className="data-[state=active]:bg-white data-[state=active]:dark:bg-zinc-800 data-[state=active]:text-zinc-900 data-[state=active]:dark:text-white text-zinc-500 dark:text-zinc-400 rounded-md transition-all"
+              >
+                Upload File
+              </TabsTrigger>
+              <TabsTrigger 
+                value="manual"
+                className="data-[state=active]:bg-white data-[state=active]:dark:bg-zinc-800 data-[state=active]:text-zinc-900 data-[state=active]:dark:text-white text-zinc-500 dark:text-zinc-400 rounded-md transition-all"
+              >
+                Manual Entry
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="upload" className="mt-0 focus-visible:ring-0 focus-visible:outline-none">
+              <FileUpload
+                onAnalysisComplete={setAnalysisResult}
+                isAnalyzing={isAnalyzing}
+                setIsAnalyzing={setIsAnalyzing}
+              />
+            </TabsContent>
+
+            <TabsContent value="manual" className="mt-0 focus-visible:ring-0 focus-visible:outline-none">
+              <ManualInput
+                onAnalysisComplete={setAnalysisResult}
+                isAnalyzing={isAnalyzing}
+                setIsAnalyzing={setIsAnalyzing}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+
+      {/* RIGHT PANEL: VISUALIZATION */}
+      <div className="lg:col-span-7 flex flex-col gap-6">
+        <AnalysisResults result={analysisResult} isAnalyzing={isAnalyzing} />
+      </div>
+      </div>
+    </div>
+  );
+}
+
+
+================================================================================
+FILE: components/analysis-results.tsx
+================================================================================
+
+"use client"
+
+import { useState } from 'react'
+import axios from 'axios'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Download, Calculator, Loader2, TrendingUp, Target, Layers } from 'lucide-react'
+import { toast } from 'sonner'
+import { useConfig } from '@/hooks/use-config'
+import type { AnalysisResult } from '@/app/page'
+
+interface AnalysisResultsProps {
+  result: AnalysisResult | null
+  isAnalyzing: boolean
+}
+
+interface ModelData {
+  feature_names?: string[]
+  target_names?: string[]
+  coefficients?: number[]
+  intercepts?: number[]
+  intercept?: number
+  is_polynomial?: boolean
+  degree?: number
+  multi_output?: boolean
+  model_id?: string
+}
+
+interface ExtendedAnalysisResult {
+  function: string
+  accuracy: string
+  visualization: string
+  data_points: number
+  x_column?: string
+  y_column?: string
+  model?: ModelData
+  functions?: string[]
+  accuracies?: number[]
+  filename?: string
+  target_visualizations?: Array<{
+    target: string
+    image: string
+  }>
+}
+
+interface PredictionResponse {
+  success: boolean
+  predictions: number[]
+}
+
+export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
+  const [predictionInputs, setPredictionInputs] = useState<{[key: string]: string}>({})
+  const [predictionResult, setPredictionResult] = useState<number | number[] | null>(null)
+  const [isPredicting, setIsPredicting] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
+  const { backendUrl } = useConfig()
+  const extendedResult = result as ExtendedAnalysisResult
+  const accuracyRaw = extendedResult?.accuracy || extendedResult?.accuracies?.[0]
+  const accuracyValue = accuracyRaw
+    ? `${parseFloat(String(accuracyRaw).replace('%', '')).toFixed(1)}%`
+    : '—'
+  const modelDegree = extendedResult?.model?.degree ?? 1
+  const modelLabel = extendedResult?.model?.is_polynomial ? `Polynomial (deg ${modelDegree})` : 'Linear'
+  const targetCount = extendedResult?.model?.target_names?.length || 1
+
+  const handlePredict = async () => {
+    const extendedResult = result as ExtendedAnalysisResult
+    if (!extendedResult || !extendedResult.model?.feature_names) {
+      toast.error("No model available", {
+        description: "Please analyze data first.",
+      })
+      return
+    }
+
+    const featureNames = extendedResult.model.feature_names
+    const baseFeatures = Array.from(new Set(
+      featureNames.filter((f: string) => !f.includes('^') && !f.includes('*'))
+    ))
+    const inputValues: number[] = []
+    
+    for (const feature of baseFeatures) {
+      const value = predictionInputs[feature]
+      if (!value || value.trim() === '') {
+        toast.error("Missing input", {
+          description: `Please enter a value for ${feature}.`,
+        })
+        return
+      }
+      const numValue = parseFloat(value.trim())
+      if (isNaN(numValue)) {
+        toast.error("Invalid input", {
+          description: `Please enter a valid number for ${feature}.`,
+        })
+        return
+      }
+      inputValues.push(numValue)
+    }
+
+    setIsPredicting(true)
+
+    try {
+      const response = await axios.post<PredictionResponse>(`${backendUrl}/predict`, {
+        x_values: [inputValues],
+        coefficients: extendedResult.model?.coefficients ?? [],
+        intercept: extendedResult.model?.intercepts ?? extendedResult.model?.intercept ?? 0,
+        is_polynomial: extendedResult.model?.is_polynomial ?? false,
+        degree: extendedResult.model?.degree ?? 1,
+        multi_output: extendedResult.model?.multi_output ?? false,
+        feature_names: featureNames,
+        model_id: extendedResult.model?.model_id,
+      })
+
+      if (response.data.success && response.data.predictions.length > 0) {
+        setPredictionResult(response.data.predictions[0])
+        const targetNames = extendedResult.model?.target_names || ['Output']
+        
+        if (Array.isArray(response.data.predictions[0])) {
+          const predictions = response.data.predictions[0]
+          let description = 'Predictions: '
+          predictions.forEach((pred: number, idx: number) => {
+            description += `${targetNames[idx] || `Target ${idx + 1}`}: ${pred.toFixed(4)}`
+            if (idx < predictions.length - 1) description += ', '
+          })
+          toast.success("Prediction complete", {
+            description,
+          })
+        } else {
+          toast.success("Prediction complete", {
+            description: `${targetNames[0] || 'Predicted'}: ${response.data.predictions[0].toFixed(4)}`,
+          })
+        }
+      }
+    } catch (error: unknown) {
+      console.error('Prediction error:', error)
+      const errorMessage = error instanceof Error ? error.message : "An error occurred during prediction."
+      toast.error("Prediction failed", {
+        description: errorMessage,
+      })
+    } finally {
+      setIsPredicting(false)
+    }
+  }
+
+  const handleDownloadReport = async () => {
+    if (!result) return;
+
+    const extendedResult = result as ExtendedAnalysisResult
+    setIsDownloading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('data_points', result.data_points.toString());
+      formData.append('filename', extendedResult.filename || 'uploaded_file');
+      
+      const model = extendedResult.model;
+      if (model) {
+          formData.append('x_columns', JSON.stringify(model.feature_names || []));
+          formData.append('y_columns', JSON.stringify(model.target_names || []));
+          formData.append('coefficients', JSON.stringify(model.coefficients || []));
+      }
+      
+      if (extendedResult.functions && extendedResult.accuracies) {
+          formData.append('functions', JSON.stringify(extendedResult.functions));
+          formData.append('accuracies', JSON.stringify(extendedResult.accuracies));
+      } else {
+          formData.append('functions', JSON.stringify([extendedResult.function || '']));
+          formData.append('accuracies', JSON.stringify([extendedResult.accuracy || '']));
+      }
+
+      const response = await axios.post(`${backendUrl}/generate-pdf`, formData);
+
+      if (response.data?.job_id) {
+        const { job_id, filename } = response.data;
+        toast.info("Report Generation Started", {
+          description: "Your PDF report will be downloaded shortly.",
+        });
+        
+        setTimeout(() => {
+            const link = document.createElement('a');
+            link.href = `${backendUrl}/download-report/${job_id}`;
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }, 1000);
+
+      } else {
+        throw new Error('Failed to start report generation');
+      }
+    } catch (error: unknown) {
+      console.error('Download error:', error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to generate PDF report."
+      toast.error("Download failed", {
+        description: errorMessage,
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  if (isAnalyzing) {
+    return (
+      <Card>
+        <CardContent className="p-8">
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Analyzing your data...</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (!result) {
+    return (
+      <Card>
+        <CardContent className="p-8">
+          <div className="flex flex-col items-center justify-center space-y-4 text-center">
+            <TrendingUp className="h-12 w-12 text-muted-foreground" />
+            <div>
+              <h3 className="font-semibold text-foreground">No Analysis Yet</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Upload a file or input data manually to see your mathematical function
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Card className="border-border/70 bg-card/80">
+          <CardContent className="flex items-center gap-3 p-4">
+            <div className="rounded-full bg-primary/10 p-2 text-primary">
+              <Target className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">
+                Accuracy
+              </p>
+              <p className="text-lg font-semibold text-foreground">{accuracyValue}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-border/70 bg-card/80">
+          <CardContent className="flex items-center gap-3 p-4">
+            <div className="rounded-full bg-primary/10 p-2 text-primary">
+              <Layers className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">
+                Data points
+              </p>
+              <p className="text-lg font-semibold text-foreground">
+                {result.data_points}
+                <span className="ml-2 text-xs text-muted-foreground">
+                  {modelLabel} · {targetCount} target{targetCount > 1 ? 's' : ''}
+                </span>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calculator className="h-5 w-5" />
+            Generated Function(s)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {Array.isArray(extendedResult.functions) ? (
+              <div className="space-y-2">
+                {extendedResult.functions.map((fn: string, idx: number) => (
+                  <div key={idx} className="p-3 bg-muted rounded">
+                    <p className="font-mono text-sm">{fn}</p>
+                    {extendedResult.accuracies && (
+                      <p className="text-xs text-muted-foreground mt-1">Accuracy: {extendedResult.accuracies[idx]}%</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="font-mono text-lg text-center">{extendedResult.function}</p>
+                {extendedResult.accuracy && (
+                  <p className="text-xs text-muted-foreground text-center mt-2">Accuracy: {extendedResult.accuracy}</p>
+                )}
+              </div>
+            )}
+            <div className="text-sm">
+              <span className="text-muted-foreground">Data Points:</span>
+              <span className="ml-2 font-semibold">{result.data_points}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {extendedResult.target_visualizations ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Data Visualization</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue={extendedResult.target_visualizations?.[0]?.target || '0'} className="w-full">
+              <TabsList className="flex flex-wrap">
+                {extendedResult.target_visualizations.map((tv) => (
+                  <TabsTrigger key={tv.target} value={tv.target} className="mr-1 mb-1">
+                    {tv.target}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              {extendedResult.target_visualizations.map((tv) => (
+                <TabsContent key={tv.target} value={tv.target}>
+                  <div className="flex justify-center">
+                    <img
+                      src={`data:image/png;base64,${tv.image}`}
+                      alt={`Visualization for ${tv.target}`}
+                      className="max-w-full h-auto rounded-lg border"
+                    />
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </CardContent>
+        </Card>
+      ) : result.visualization && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Data Visualization</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-center">
+              <img 
+                src={`data:image/png;base64,${result.visualization}`} 
+                alt="Data visualization"
+                className="max-w-full h-auto rounded-lg border"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Tools</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="predict" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="predict">Prediction</TabsTrigger>
+              <TabsTrigger value="export">Export</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="predict" className="space-y-4 pt-4">
+              {extendedResult.model?.feature_names ? (
+                <div className="space-y-4">
+                  <Label>Enter values for prediction</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {(Array.from(new Set(extendedResult.model.feature_names.filter((f: string) => !f.includes('^') && !f.includes('*')))) as string[]).map((feature: string) => (
+                      <div key={feature} className="space-y-1">
+                        <Label htmlFor={`input-${feature}`} className="text-xs">
+                          {feature}
+                        </Label>
+                        <Input
+                          id={`input-${feature}`}
+                          placeholder={`Enter ${feature}`}
+                          value={predictionInputs[feature] || ''}
+                          onChange={(e) => setPredictionInputs(prev => ({
+                            ...prev,
+                            [feature]: e.target.value
+                          }))}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <Button 
+                    onClick={handlePredict}
+                    disabled={isPredicting}
+                    className="w-full border-2 border-transparent"
+                  >
+                    {isPredicting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Predicting...
+                      </>
+                    ) : (
+                      'Predict'
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No model available for prediction.</p>
+              )}
+              
+              {predictionResult !== null && (
+                <div className="p-3 bg-primary/10 rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-2">Prediction Results:</p>
+                  {Array.isArray(predictionResult) ? (
+                    <div className="space-y-1">
+                      {predictionResult.map((pred: number, idx: number) => {
+                        const targetName = extendedResult.model?.target_names?.[idx] || `Target ${idx + 1}`
+                        return (
+                          <p key={idx} className="font-mono text-sm">
+                            <span className="text-muted-foreground">{targetName}:</span> {pred.toFixed(4)}
+                          </p>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <p className="font-mono text-lg font-semibold">
+                      {predictionResult.toFixed(4)}
+                    </p>
+                  )}
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="export" className="space-y-4 pt-4">
+              <Button 
+                onClick={handleDownloadReport}
+                disabled={isDownloading}
+                className="w-full border-2 border-transparent"
+              >
+                {isDownloading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download PDF Report
+                  </>
+                )}
+              </Button>
+              <p className="text-xs text-muted-foreground text-center">
+                Download a comprehensive PDF document with your analysis results
+              </p>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+
+================================================================================
+FILE: components/config-manager.tsx
+================================================================================
+
+"use client"
+
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Settings, Save, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { useConfig } from '@/hooks/use-config'
+
+export function ConfigManager() {
+  const [isEditing, setIsEditing] = useState(false)
+  const [backendUrl, setBackendUrl] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+  const { config, reload } = useConfig()
+
+  const handleEdit = () => {
+    setBackendUrl(config?.backend.baseUrl || 'http://localhost:8000')
+    setIsEditing(true)
+  }
+
+  const handleSave = async () => {
+    if (!backendUrl.trim()) {
+      toast.error("Invalid URL", {
+        description: "Please enter a valid backend URL.",
+      })
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      // In a real application, this would be saved to a server endpoint.
+      // For this example, we'll just show a success message.
+      toast.success("Configuration updated", {
+        description: "Backend URL has been updated. Please restart the application for changes to take effect.",
+      })
+      
+      setIsEditing(false)
+      reload() // This will reload the config from the file
+    } catch {
+      toast.error("Save failed", {
+        description: "Failed to save configuration. Please try again.",
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleCancel = () => {
+    setIsEditing(false)
+    setBackendUrl('')
+  }
+
+  return (
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Settings className="h-5 w-5" />
+          Configuration
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="backend-url">Backend Server URL</Label>
+          {isEditing ? (
+            <div className="flex gap-2">
+              <Input
+                id="backend-url"
+                value={backendUrl}
+                onChange={(e) => setBackendUrl(e.target.value)}
+                placeholder="http://localhost:8000"
+              />
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isSaving}
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">
+                {config?.backend.baseUrl || 'http://localhost:8000'}
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleEdit}
+              >
+                Edit
+              </Button>
+            </div>
+          )}
+        </div>
+        
+        <p className="text-xs text-muted-foreground">
+          Edit the backend server URL in the public/config.json file to change this setting permanently.
+        </p>
+      </CardContent>
+    </Card>
+  )
+}
+
+
+================================================================================
+FILE: components/file-upload.tsx
+================================================================================
+
+"use client"
+
+import { useState, useCallback, useRef } from 'react'
+import { useDropzone } from 'react-dropzone'
+import axios from 'axios'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Upload, FileText, CheckCircle2, Loader2, Database, AlertCircle, X } from 'lucide-react'
+import { toast } from 'sonner'
+import { useConfig } from '@/hooks/use-config'
+import type { AnalysisResult } from '@/app/page'
+import gsap from 'gsap'
+import { useGSAP } from '@gsap/react'
+
+interface FileUploadProps {
+  onAnalysisComplete: (result: AnalysisResult) => void
+  isAnalyzing: boolean
+  setIsAnalyzing: (analyzing: boolean) => void
+}
+
+interface FileInfo {
+  filename: string
+  shape: [number, number]
+  columns: string[]
+  numeric_columns: string[]
+  head: unknown[]
+}
+
+export function FileUpload({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: FileUploadProps) {
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [fileInfo, setFileInfo] = useState<FileInfo | null>(null)
+  const [selectedXColumns, setSelectedXColumns] = useState<string[]>([])
+  const [selectedYColumns, setSelectedYColumns] = useState<string[]>([])
+  const [polyDegree, setPolyDegree] = useState<number>(1)
+  const [usingExampleData, setUsingExampleData] = useState(false)
+  const { backendUrl } = useConfig()
+  
+  const settingsRef = useRef<HTMLDivElement>(null)
+
+  // GSAP animation for settings reveal
+  useGSAP(() => {
+    if (fileInfo && settingsRef.current) {
+      gsap.fromTo(settingsRef.current, 
+        { height: 0, opacity: 0 },
+        { height: 'auto', opacity: 1, duration: 0.5, ease: 'power2.out' }
+      )
+    }
+  }, [fileInfo])
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0]
+    if (!file) return
+
+    const validTypes = ['.csv', '.xlsx', '.xls', '.json']
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
+    
+    if (!validTypes.includes(fileExtension)) {
+      toast.error("Invalid file type", {
+        description: "Please upload a CSV, XLSX, or JSON file.",
+      })
+      return
+    }
+
+    setUploadedFile(file)
+    setUsingExampleData(false)
+    setIsAnalyzing(true)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await axios.post(`${backendUrl}/upload-file`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+
+      if (response.data.success) {
+        setFileInfo(response.data.data)
+        toast.success("File uploaded")
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to upload file"
+      toast.error("Upload failed", { description: errorMessage })
+      setUploadedFile(null)
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }, [setIsAnalyzing, backendUrl])
+
+  const loadExampleData = async () => {
+    setIsAnalyzing(true)
+    try {
+      const response = await fetch('/Cricket_ODI_DataSet.csv')
+      const csvText = await response.text()
+      const csvBlob = new Blob([csvText], { type: 'text/csv' })
+      const csvFile = new File([csvBlob], 'Cricket_ODI_DataSet.csv', { type: 'text/csv' })
+      
+      const formData = new FormData()
+      formData.append('file', csvFile)
+      const uploadResponse = await axios.post(`${backendUrl}/upload-file`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+
+      if (uploadResponse.data.success) {
+        setUploadedFile(csvFile)
+        setFileInfo(uploadResponse.data.data)
+        setUsingExampleData(true)
+        setSelectedXColumns([])
+        setSelectedYColumns([])
+        toast.success("Example Data Loaded")
+      }
+    } catch (error: unknown) {
+      toast.error("Failed to load example data")
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
+  const toggleColumn = (column: string, type: 'x' | 'y') => {
+    if (type === 'x') {
+      setSelectedXColumns(prev => 
+        prev.includes(column) ? prev.filter(c => c !== column) : [...prev, column]
+      )
+    } else {
+      setSelectedYColumns(prev => 
+        prev.includes(column) ? prev.filter(c => c !== column) : [...prev, column]
+      )
+    }
+  }
+
+  const handleAnalyze = async () => {
+    if (!uploadedFile || selectedXColumns.length === 0 || selectedYColumns.length === 0) {
+      toast.error("Selection Required", { description: "Please select X and Y columns." })
+      return
+    }
+
+    setIsAnalyzing(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', uploadedFile)
+      formData.append('x_columns', JSON.stringify(selectedXColumns))
+      formData.append('y_columns', JSON.stringify(selectedYColumns))
+      formData.append('poly_degree', String(polyDegree))
+
+      const response = await axios.post(`${backendUrl}/analyze-data`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+
+      if (response.data.success) {
+        onAnalysisComplete(response.data)
+        toast.success("Analysis Complete")
+      }
+    } catch (error: unknown) {
+      toast.error("Analysis Failed")
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
+  const reset = () => {
+    setUploadedFile(null)
+    setFileInfo(null)
+    setSelectedXColumns([])
+    setSelectedYColumns([])
+    setPolyDegree(1)
+  }
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'text/csv': ['.csv'],
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+      'application/json': ['.json'],
+    },
+    multiple: false,
+  })
+
+  // Column Selector Component
+  const ColumnSelector = ({ title, selected, onToggle, columns, otherSelected }: { 
+    title: string
+    selected: string[]
+    onToggle: (col: string) => void
+    columns: string[]
+    otherSelected: string[]
+  }) => (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between mb-2">
+        <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{title}</Label>
+        <span className="text-xs text-muted-foreground">{selected.length} selected</span>
+      </div>
+      
+      {/* Action Buttons */}
+      <div className="flex flex-wrap gap-2 mb-3">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            columns.forEach(col => {
+              if (!selected.includes(col)) onToggle(col)
+            })
+          }}
+          className="h-7 px-3 text-xs border-border/50 hover:border-primary/30 hover:bg-primary/5"
+        >
+          Select All
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            const remaining = columns.filter(col => !otherSelected.includes(col))
+            remaining.forEach(col => {
+              if (!selected.includes(col)) onToggle(col)
+            })
+          }}
+          className="h-7 px-3 text-xs border-border/50 hover:border-primary/30 hover:bg-primary/5"
+        >
+          Select Remaining
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            selected.forEach(col => onToggle(col))
+          }}
+          className="h-7 px-3 text-xs border-border/50 hover:border-primary/30 hover:bg-primary/5"
+        >
+          Clear
+        </Button>
+      </div>
+      
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-60 overflow-y-auto p-1">
+        {columns.map(col => {
+          const isSelected = selected.includes(col);
+          return (
+            <div 
+              key={col}
+              onClick={() => onToggle(col)}
+              className={`
+                cursor-pointer text-xs p-2 rounded-md border transition-all duration-200 flex items-center justify-between
+                ${isSelected 
+                  ? 'border-primary/40 bg-primary/5 text-foreground font-medium shadow-sm' 
+                  : 'border-border/50 bg-background hover:bg-muted/50 text-muted-foreground hover:border-primary/20'
+                }
+              `}
+            >
+              <span className="truncate mr-2">{col}</span>
+              {isSelected && <CheckCircle2 className="w-3 h-3 text-primary flex-shrink-0" />}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="space-y-6 w-full max-w-4xl mx-auto">
+      
+      {/* Upload Zone */}
+      {!fileInfo && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div
+            {...getRootProps()}
+            className={`
+              relative group cursor-pointer overflow-hidden rounded-xl border border-dashed p-10 text-center transition-all duration-300 bg-gradient-to-br from-background to-primary/5
+              ${isDragActive ? 'border-primary/40 bg-primary/10 scale-[0.99]' : 'border-border/50 hover:border-primary/30 hover:bg-primary/5'}
+            `}
+          >
+            <input {...getInputProps()} />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            
+            <div className="relative z-10 flex flex-col items-center">
+              <div className="p-4 bg-background rounded-full shadow-sm border border-border mb-4 group-hover:scale-110 transition-transform duration-300">
+                <Upload className="h-6 w-6 text-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-1">Upload Dataset</h3>
+              <p className="text-sm text-muted-foreground">Drag & drop CSV, JSON or Excel</p>
+            </div>
+          </div>
+
+          {/* Example Data Card */}
+          <div 
+            onClick={loadExampleData}
+            className="relative group cursor-pointer overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-background to-primary/5 p-10 text-center transition-all duration-300 hover:border-primary/30 hover:bg-primary/5 hover:shadow-lg"
+          >
+             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+             <div className="relative z-10 flex flex-col items-center">
+               <div className="p-4 bg-background rounded-full shadow-sm border border-border mb-4 group-hover:scale-110 transition-transform duration-300">
+                 <Database className="h-6 w-6 text-foreground" />
+               </div>
+               <h3 className="text-lg font-semibold text-foreground mb-1">Use Example Data</h3>
+               <p className="text-sm text-muted-foreground">Test with Cricket ODI dataset</p>
+             </div>
+             {isAnalyzing && (
+               <div className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center">
+                 <Loader2 className="animate-spin text-primary" />
+               </div>
+             )}
+          </div>
+        </div>
+      )}
+
+      {/* File Loaded View */}
+      {fileInfo && (
+        <Card className="border-border/50 bg-gradient-to-r from-primary/5 via-primary/3 to-transparent overflow-hidden">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-background rounded border border-border/50">
+                <FileText className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">{fileInfo.filename}</p>
+                <p className="text-xs text-muted-foreground">{fileInfo.shape[0]} rows • {fileInfo.shape[1]} columns</p>
+              </div>
+            </div>
+            <Button variant="ghost" size="sm" onClick={reset} className="text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+              <X className="w-4 h-4 mr-2" /> Change File
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Configuration Panel */}
+      {fileInfo && (
+        <div ref={settingsRef} className="overflow-hidden">
+          <Card className="border-border/50 bg-gradient-to-br from-background via-background to-primary/5">
+            <CardHeader className="border-b border-border/50 bg-muted/20 pb-4">
+              <CardTitle className="text-base font-medium flex items-center gap-2 text-foreground">
+                <div className="w-2 h-2 rounded-full bg-primary/60" />
+                Configure Analysis
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 space-y-8">
+              
+              {/* Regression Type */}
+              <div className="space-y-3">
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Model Type</Label>
+                <div className="flex gap-3">
+                  {[1, 2].map((degree) => (
+                    <div
+                      key={degree}
+                      onClick={() => setPolyDegree(degree)}
+                      className={`
+                        flex-1 cursor-pointer p-4 rounded-lg border text-center transition-all duration-200
+                        ${polyDegree === degree 
+                          ? 'border-primary/40 bg-primary/5 text-primary font-semibold shadow-sm' 
+                          : 'border-border/50 bg-background text-muted-foreground hover:border-primary/30 hover:bg-primary/5'
+                        }
+                      `}
+                    >
+                      <div className="text-sm">{degree === 1 ? "Linear Regression" : "Polynomial (deg 2)"}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Columns Grid */}
+              <div className="grid md:grid-cols-2 gap-8 pt-4 border-t border-border/50">
+                 <ColumnSelector 
+                    title="X Columns (Features)" 
+                    columns={fileInfo.numeric_columns} 
+                    selected={selectedXColumns} 
+                    onToggle={(col) => toggleColumn(col, 'x')}
+                    otherSelected={selectedYColumns}
+                 />
+                 <ColumnSelector 
+                    title="Y Columns (Targets)" 
+                    columns={fileInfo.numeric_columns} 
+                    selected={selectedYColumns} 
+                    onToggle={(col) => toggleColumn(col, 'y')}
+                    otherSelected={selectedXColumns}
+                 />
+              </div>
+
+              {/* Analyze Button */}
+              <div className="pt-6 border-t border-border/50">
+                <Button 
+                  onClick={handleAnalyze} 
+                  disabled={isAnalyzing || selectedXColumns.length === 0 || selectedYColumns.length === 0} 
+                  className="w-full h-12 text-lg font-medium bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg transition-all"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...
+                    </>
+                  ) : (
+                    "Run Analysis"
+                  )}
+                </Button>
+              </div>
+
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {fileInfo && fileInfo.numeric_columns.length < 2 && (
+        <Card className="border-destructive/20 bg-destructive/5">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2 text-destructive">
+              <AlertCircle className="h-4 w-4" />
+              <p className="text-sm">
+                At least 2 numeric columns are required for analysis. Found {fileInfo.numeric_columns.length} numeric column(s).
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+}
+
+
+================================================================================
+FILE: components/fluent-button.tsx
+================================================================================
+
+import * as React from "react";
+import { cn } from "@/lib/utils";
+
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "primary" | "secondary" | "outline" | "ghost";
+  size?: "sm" | "md" | "lg";
+  children: React.ReactNode;
+}
+
+export const Button: React.FC<ButtonProps> = ({
+  variant = "primary",
+  size = "md",
+  children,
+  className = "",
+  ...props
+}) => {
+  const baseStyles =
+    "relative inline-flex items-center justify-center font-bold tracking-wide transition-all duration-200 outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed group overflow-hidden rounded-lg cursor-pointer";
+
+  const variants = {
+    primary:
+      "bg-primary text-primary-foreground border border-primary/40 shadow-sm hover:bg-primary/80 hover:border-primary/50 hover:shadow-md active:scale-[0.98]",
+    secondary:
+      "bg-muted/80 text-muted-foreground border border-border/60 shadow-sm hover:bg-muted hover:border-border/70 active:scale-[0.98]",
+    outline:
+      "bg-background/50 backdrop-blur-sm text-foreground border border-border/60 shadow-sm hover:bg-muted/50 hover:border-border/80 active:scale-[0.98]",
+    ghost:
+      "bg-transparent text-foreground border border-transparent hover:bg-muted/50 hover:border-border/40 active:scale-[0.98]",
+  };
+
+  const sizes = {
+    sm: "px-4 py-2 text-sm gap-2",
+    md: "px-6 py-3 text-base gap-2",
+    lg: "px-8 py-4 text-lg gap-2",
+  };
+
+  return (
+    <button
+      className={cn(baseStyles, variants[variant], sizes[size], className)}
+      {...props}
+    >
+      <span className="relative flex items-center gap-2">{children}</span>
+    </button>
+  );
+};
+
+
+================================================================================
+FILE: components/manual-input.tsx
+================================================================================
+
+"use client"
+
+import { useState } from 'react'
+import axios from 'axios'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Plus, Trash2, Loader2, Keyboard } from 'lucide-react'
+import { toast } from 'sonner'
+import { useConfig } from '@/hooks/use-config'
+import type { AnalysisResult } from '@/app/page'
+
+interface DataPoint {
+  x: string
+  y: string
+}
+
+interface ManualInputProps {
+  onAnalysisComplete: (result: AnalysisResult) => void
+  isAnalyzing: boolean
+  setIsAnalyzing: (analyzing: boolean) => void
+}
+
+interface ParsedDataPoint {
+  x: number | number[]
+  y: number
+}
+
+export function ManualInput({ onAnalysisComplete, isAnalyzing, setIsAnalyzing }: ManualInputProps) {
+  const [dataPoints, setDataPoints] = useState<DataPoint[]>([
+    { x: '', y: '' },
+    { x: '', y: '' },
+    { x: '', y: '' },
+  ])
+  const { backendUrl } = useConfig()
+
+  const addDataPoint = () => setDataPoints([...dataPoints, { x: '', y: '' }])
+
+  const removeDataPoint = (index: number) => {
+    if (dataPoints.length > 2) {
+      setDataPoints(dataPoints.filter((_, i) => i !== index))
+    }
+  }
+
+  const updateDataPoint = (index: number, field: 'x' | 'y', value: string) => {
+    const updated = [...dataPoints]
+    updated[index][field] = value
+    setDataPoints(updated)
+  }
+
+  const parseXValue = (xStr: string): number | number[] => {
+    if (xStr.includes(',')) {
+      const values = xStr.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v))
+      return values.length > 1 ? values : parseFloat(xStr)
+    }
+    return parseFloat(xStr)
+  }
+
+  const validateAndParseData = (): ParsedDataPoint[] | null => {
+    const validPoints = dataPoints.filter(point => point.x.trim() && point.y.trim())
+    if (validPoints.length < 2) {
+      toast.error("Insufficient Data", { description: "Minimum 2 points required." })
+      return null
+    }
+    const parsedPoints: ParsedDataPoint[] = []
+    for (const point of validPoints) {
+      const xValue = parseXValue(point.x)
+      const yValue = parseFloat(point.y)
+      if (isNaN(yValue) || (typeof xValue === 'number' && isNaN(xValue))) {
+        toast.error("Invalid Input", { description: "Numbers only." })
+        return null
+      }
+      parsedPoints.push({ x: xValue, y: yValue })
+    }
+    return parsedPoints
+  }
+
+  const handleAnalyze = async () => {
+    const parsedData = validateAndParseData()
+    if (!parsedData) return
+
+    setIsAnalyzing(true)
+    try {
+      const response = await axios.post(`${backendUrl}/analyze-manual`, { data_points: parsedData })
+      if (response.data.success) {
+        onAnalysisComplete(response.data)
+        toast.success("Analysis Complete")
+      }
+    } catch (error: unknown) {
+      toast.error("Analysis Failed")
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
+  return (
+    <Card className="border-border/50 bg-gradient-to-br from-background via-background to-primary/5">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-foreground">
+            <Keyboard className="w-5 h-5 text-muted-foreground" />
+            Manual Entry
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="bg-muted/20 rounded-lg p-4 border border-border/50 space-y-3 max-h-[400px] overflow-y-auto">
+            {dataPoints.map((point, index) => (
+            <div key={index} className="flex items-center gap-3 animate-fade-in-up">
+                <div className="flex-1 relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-mono">X</span>
+                    <Input
+                        className="pl-8 font-mono text-sm bg-background"
+                        placeholder="1.5"
+                        value={point.x}
+                        onChange={(e) => updateDataPoint(index, 'x', e.target.value)}
+                    />
+                </div>
+                <div className="flex-1 relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-mono">Y</span>
+                    <Input
+                        className="pl-8 font-mono text-sm bg-background"
+                        placeholder="10"
+                        value={point.y}
+                        onChange={(e) => updateDataPoint(index, 'y', e.target.value)}
+                    />
+                </div>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeDataPoint(index)}
+                    disabled={dataPoints.length <= 2}
+                    className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                >
+                <Trash2 className="h-4 w-4" />
+                </Button>
+            </div>
+            ))}
+        </div>
+
+        <div className="flex gap-4">
+            <Button variant="outline" onClick={addDataPoint} className="flex-1 border-dashed border-border/50 hover:border-primary/30 hover:bg-primary/5">
+                <Plus className="mr-2 h-4 w-4" /> Add Row
+            </Button>
+            <Button onClick={handleAnalyze} disabled={isAnalyzing} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
+                {isAnalyzing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Analyze"}
+            </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+
+================================================================================
+FILE: components/theme-provider.tsx
+================================================================================
+
+"use client"
+
+import * as React from "react"
+import { ThemeProvider as NextThemesProvider } from "next-themes"
+
+type Attribute = "class" | "data-theme" | "data-mode"
+
+interface ThemeProviderProps {
+  children: React.ReactNode
+  attribute?: Attribute | Attribute[]
+  defaultTheme?: string
+  enableSystem?: boolean
+  disableTransitionOnChange?: boolean
+}
+
+export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
+  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+}
+
+
+
+================================================================================
+FILE: components/theme-toggle.tsx
+================================================================================
+
+"use client"
+
+import * as React from "react"
+import { Moon, Sun } from "lucide-react"
+import { useTheme } from "next-themes"
+
+import { Button } from "@/components/ui/button"
+
+export function ThemeToggle() {
+  const { setTheme, theme } = useTheme()
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+    >
+      <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+      <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+      <span className="sr-only">Toggle theme</span>
+    </Button>
+  )
+}
+
+
