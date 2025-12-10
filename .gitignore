@@ -31,6 +31,7 @@ fluent/
 # Next.js
 .serverless/
 frontend/.next/
+serverless.yml
 frontend/out/
 frontend/dist/
 frontend/build/
