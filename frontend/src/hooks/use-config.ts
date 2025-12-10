@@ -3,7 +3,7 @@ import { loadConfig, getBackendUrl, Config } from '../lib/config';
 
 export function useConfig() {
   const [config, setConfig] = useState<Config | null>(null);
-  const [backendUrl, setBackendUrl] = useState<string>('http://localhost:8000');
+  const [backendUrl, setBackendUrl] = useState<string>('https://fluent-bc62.onrender.com');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

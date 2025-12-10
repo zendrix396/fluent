@@ -6,6 +6,7 @@ app = create_app()
 
 register_routers(app)
 
+
 handler = Mangum(app)
 
 if __name__ == "__main__":

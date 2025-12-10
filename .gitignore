@@ -25,7 +25,8 @@ Thumbs.db
 .env.development.local
 .env.test.local
 .env.production.local
-
+inspiration/
+fluent/
 # Next.js
 frontend/.next/
 frontend/out/

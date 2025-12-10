@@ -18,7 +18,7 @@ export const loadConfig = async (): Promise<Config> => {
     // Fallback to default configuration
     return {
       backend: {
-        baseUrl: "http://localhost:8000",
+        baseUrl: "https://fluent-bc62.onrender.com",
       },
     };
   }

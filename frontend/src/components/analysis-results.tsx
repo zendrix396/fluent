@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Download, Calculator, Loader2, TrendingUp } from 'lucide-react'
+import { Download, Calculator, Loader2, TrendingUp, Target, Layers } from 'lucide-react'
 import { toast } from 'sonner'
 import { useConfig } from '@/hooks/use-config'
-import type { AnalysisResult } from '@/app/page'
+import type { AnalysisResult } from '@/types'
 
 interface AnalysisResultsProps {
   result: AnalysisResult | null
@@ -57,6 +57,14 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
   const [isPredicting, setIsPredicting] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const { backendUrl } = useConfig()
+  const extendedResult = result as ExtendedAnalysisResult
+  const accuracyRaw = extendedResult?.accuracy || extendedResult?.accuracies?.[0]
+  const accuracyValue = accuracyRaw
+    ? `${parseFloat(String(accuracyRaw).replace('%', '')).toFixed(1)}%`
+    : '—'
+  const modelDegree = extendedResult?.model?.degree ?? 1
+  const modelLabel = extendedResult?.model?.is_polynomial ? `Polynomial (deg ${modelDegree})` : 'Linear'
+  const targetCount = extendedResult?.model?.target_names?.length || 1
 
   const handlePredict = async () => {
     const extendedResult = result as ExtendedAnalysisResult
@@ -224,13 +232,45 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
     )
   }
 
-  const extendedResult = result as ExtendedAnalysisResult
-
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Card className="border-border/70 bg-card/80">
+          <CardContent className="flex items-center gap-3 p-4">
+            <div className="rounded-full bg-primary/10 p-2 text-primary">
+              <Target className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">
+                Accuracy
+              </p>
+              <p className="text-lg font-semibold text-foreground">{accuracyValue}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-border/70 bg-card/80">
+          <CardContent className="flex items-center gap-3 p-4">
+            <div className="rounded-full bg-primary/10 p-2 text-primary">
+              <Layers className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">
+                Data points
+              </p>
+              <p className="text-lg font-semibold text-foreground">
+                {result.data_points}
+                <span className="ml-2 text-xs text-muted-foreground">
+                  {modelLabel} · {targetCount} target{targetCount > 1 ? 's' : ''}
+                </span>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-xl">
+        <CardHeader className="border-b border-zinc-200 dark:border-zinc-800">
+          <CardTitle className="flex items-center gap-2 text-zinc-900 dark:text-white">
             <Calculator className="h-5 w-5" />
             Generated Function(s)
           </CardTitle>
@@ -265,9 +305,9 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
       </Card>
 
       {extendedResult.target_visualizations ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Data Visualization</CardTitle>
+        <Card className="border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-xl">
+          <CardHeader className="border-b border-zinc-200 dark:border-zinc-800">
+            <CardTitle className="text-zinc-900 dark:text-white">Data Visualization</CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue={extendedResult.target_visualizations?.[0]?.target || '0'} className="w-full">
@@ -281,6 +321,7 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
               {extendedResult.target_visualizations.map((tv) => (
                 <TabsContent key={tv.target} value={tv.target}>
                   <div className="flex justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={`data:image/png;base64,${tv.image}`}
                       alt={`Visualization for ${tv.target}`}
@@ -293,12 +334,13 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
           </CardContent>
         </Card>
       ) : result.visualization && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Data Visualization</CardTitle>
+        <Card className="border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-xl">
+          <CardHeader className="border-b border-zinc-200 dark:border-zinc-800">
+            <CardTitle className="text-zinc-900 dark:text-white">Data Visualization</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img 
                 src={`data:image/png;base64,${result.visualization}`} 
                 alt="Data visualization"
@@ -309,15 +351,15 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Tools</CardTitle>
+      <Card className="border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-xl">
+        <CardHeader className="border-b border-zinc-200 dark:border-zinc-800">
+          <CardTitle className="text-zinc-900 dark:text-white">Tools</CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="predict" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="predict">Prediction</TabsTrigger>
-              <TabsTrigger value="export">Export</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-lg border border-zinc-200 dark:border-zinc-800">
+              <TabsTrigger value="predict" className="data-[state=active]:bg-white data-[state=active]:dark:bg-zinc-800 data-[state=active]:text-zinc-900 data-[state=active]:dark:text-white text-zinc-500 dark:text-zinc-400 rounded-md transition-all">Prediction</TabsTrigger>
+              <TabsTrigger value="export" className="data-[state=active]:bg-white data-[state=active]:dark:bg-zinc-800 data-[state=active]:text-zinc-900 data-[state=active]:dark:text-white text-zinc-500 dark:text-zinc-400 rounded-md transition-all">Export</TabsTrigger>
             </TabsList>
             
             <TabsContent value="predict" className="space-y-4 pt-4">
@@ -338,6 +380,7 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
                             ...prev,
                             [feature]: e.target.value
                           }))}
+                          className="bg-white/0 dark:bg-zinc-950/0 backdrop-blur-sm border-zinc-200 dark:border-zinc-800"
                         />
                       </div>
                     ))}
@@ -345,7 +388,7 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
                   <Button 
                     onClick={handlePredict}
                     disabled={isPredicting}
-                    className="w-full"
+                    className="w-full !bg-primary/50 dark:!bg-primary/30 backdrop-blur-sm !border-0 !shadow-none hover:!bg-primary/60 dark:hover:!bg-primary/40"
                   >
                     {isPredicting ? (
                       <>
@@ -388,7 +431,7 @@ export function AnalysisResults({ result, isAnalyzing }: AnalysisResultsProps) {
               <Button 
                 onClick={handleDownloadReport}
                 disabled={isDownloading}
-                className="w-full"
+                className="w-full border-2 border-transparent"
               >
                 {isDownloading ? (
                   <>
